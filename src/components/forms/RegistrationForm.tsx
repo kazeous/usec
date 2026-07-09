@@ -34,6 +34,7 @@ export function RegistrationForm({ settings }: { settings: RegistrationSetting[]
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaInstance, setCaptchaInstance] = useState(0);
   const [teammates, setTeammates] = useState<TeammateDraft[]>(Array.from({ length: 4 }, () => ({ ...emptyTeammate })));
 
   const currentSetting = settings.find((item) => item.game === game);
@@ -57,10 +58,17 @@ export function RegistrationForm({ settings }: { settings: RegistrationSetting[]
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setStatus("loading");
     setMessage("");
 
-    const formData = new FormData(event.currentTarget);
+    if (!captchaToken) {
+      setStatus("error");
+      setMessage("Please complete the captcha before submitting.");
+      return;
+    }
+
+    const formData = new FormData(form);
     const payload = {
       game,
       mode,
@@ -74,26 +82,36 @@ export function RegistrationForm({ settings }: { settings: RegistrationSetting[]
       captchaToken
     };
 
-    const response = await fetch("/api/registration", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
+    try {
+      const response = await fetch("/api/registration", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
 
-    const result = await response.json();
+      const result = await response.json().catch(() => ({ error: "Registration could not be submitted." }));
 
-    if (!response.ok) {
+      if (!response.ok) {
+        setStatus("error");
+        setMessage(result.error ?? "Registration could not be submitted.");
+        setCaptchaToken("");
+        setCaptchaInstance((current) => current + 1);
+        return;
+      }
+
+      form.reset();
+      setCaptchaToken("");
+      setCaptchaInstance((current) => current + 1);
+      setStatus("success");
+      setMessage("Registration submitted. Staff will review it soon.");
+    } catch {
       setStatus("error");
-      setMessage(result.error ?? "Registration could not be submitted.");
-      return;
+      setMessage("Network error while submitting registration. Please try again.");
+      setCaptchaToken("");
+      setCaptchaInstance((current) => current + 1);
     }
-
-    event.currentTarget.reset();
-    setCaptchaToken("");
-    setStatus("success");
-    setMessage("Registration submitted. Staff will review it soon.");
   }
 
   return (
@@ -167,7 +185,7 @@ export function RegistrationForm({ settings }: { settings: RegistrationSetting[]
         </section>
       ) : null}
 
-      <CaptchaPlaceholder onTokenChange={setCaptchaToken} />
+      <CaptchaPlaceholder key={captchaInstance} onTokenChange={setCaptchaToken} />
 
       {!currentSetting?.isOpen ? (
         <p className="rounded-md border border-[#d8a531] bg-[#fff4d5] p-3 text-sm font-bold text-[#6d4a00]">

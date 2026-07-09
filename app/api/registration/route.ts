@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ZodError } from "zod";
 import { verifyTurnstileToken } from "@/lib/captcha";
 import { prisma } from "@/lib/db";
 import { normalizeRegistrationPayload } from "@/lib/validation";
@@ -14,7 +15,12 @@ export async function POST(request: Request) {
   })();
 
   if (!parsedResult.ok) {
-    return NextResponse.json({ error: "Registration form is incomplete or invalid." }, { status: 400 });
+    const detail =
+      parsedResult.error instanceof ZodError
+        ? parsedResult.error.issues.map((issue) => issue.message).join(" ")
+        : "Registration form is incomplete or invalid.";
+
+    return NextResponse.json({ error: detail }, { status: 400 });
   }
 
   const parsed = parsedResult.value;
