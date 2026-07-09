@@ -1,0 +1,238 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  staff
+  admin
+}
+
+enum Game {
+  valorant
+  cs2
+  lol
+}
+
+enum RegistrationMode {
+  solo
+  team
+}
+
+enum RegistrationStatus {
+  pending
+  approved
+  rejected
+}
+
+enum TournamentFormat {
+  single_elimination
+  double_elimination
+  round_robin
+  swiss
+}
+
+enum TournamentStatus {
+  draft
+  registration
+  seeded
+  live
+  complete
+  archived
+}
+
+enum MatchStatus {
+  pending
+  scheduled
+  veto
+  live
+  complete
+  disputed
+}
+
+enum BracketSide {
+  winners
+  losers
+  finals
+  round_robin
+  swiss
+}
+
+enum VetoStatus {
+  pending
+  active
+  complete
+  cancelled
+}
+
+enum VetoActionType {
+  ban
+  pick
+  decider
+}
+
+enum DraftStatus {
+  planned
+  active
+  complete
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         UserRole  @default(staff)
+  sessions     Session[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model RegistrationSetting {
+  id        String   @id @default(cuid())
+  game      Game     @unique
+  isOpen    Boolean  @default(false)
+  message   String?
+  updatedAt DateTime @updatedAt
+}
+
+model Registration {
+  id             String             @id @default(cuid())
+  game           Game
+  mode           RegistrationMode
+  status         RegistrationStatus @default(pending)
+  studentId      String
+  universityName String
+  fullName       String
+  email          String
+  discord        String?
+  teamName       String?
+  teammates      Json?
+  captchaProvider String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  team           Team?
+
+  @@index([game, status])
+}
+
+model Tournament {
+  id               String           @id @default(cuid())
+  title            String
+  game             Game
+  format           TournamentFormat
+  status           TournamentStatus @default(draft)
+  registrationOpen Boolean          @default(false)
+  startsAt         DateTime?
+  lockBracketAt    DateTime?
+  teams            Team[]
+  matches          Match[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model Team {
+  id             String        @id @default(cuid())
+  tournamentId   String?
+  tournament     Tournament?   @relation(fields: [tournamentId], references: [id], onDelete: SetNull)
+  registrationId String?       @unique
+  registration   Registration? @relation(fields: [registrationId], references: [id], onDelete: SetNull)
+  game           Game
+  name           String
+  seed           Int?
+  players        Player[]
+  matchesAsA     Match[]       @relation("MatchTeamA")
+  matchesAsB     Match[]       @relation("MatchTeamB")
+  wins           Match[]       @relation("MatchWinner")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([tournamentId, seed])
+}
+
+model Player {
+  id             String   @id @default(cuid())
+  teamId         String
+  team           Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  fullName       String
+  studentId      String
+  universityName String
+  email          String
+  discord        String?
+  isCaptain      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+}
+
+model Match {
+  id           String        @id @default(cuid())
+  tournamentId String
+  tournament   Tournament    @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  round        Int
+  position     Int
+  bracket      BracketSide
+  status       MatchStatus   @default(pending)
+  bestOf       Int           @default(1)
+  teamAId      String?
+  teamA        Team?         @relation("MatchTeamA", fields: [teamAId], references: [id], onDelete: SetNull)
+  teamBId      String?
+  teamB        Team?         @relation("MatchTeamB", fields: [teamBId], references: [id], onDelete: SetNull)
+  winnerId     String?
+  winner       Team?         @relation("MatchWinner", fields: [winnerId], references: [id], onDelete: SetNull)
+  teamAScore   Int           @default(0)
+  teamBScore   Int           @default(0)
+  scheduledAt  DateTime?
+  vetoSession  VetoSession?
+  championDraft ChampionDraft?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([tournamentId, bracket, round, position])
+}
+
+model VetoSession {
+  id        String       @id @default(cuid())
+  matchId   String       @unique
+  match     Match        @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  game      Game
+  status    VetoStatus   @default(pending)
+  mapPool   Json
+  actions   VetoAction[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}
+
+model VetoAction {
+  id          String         @id @default(cuid())
+  sessionId   String
+  session     VetoSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  actorTeamId String?
+  action      VetoActionType
+  mapName     String
+  order       Int
+  createdAt   DateTime       @default(now())
+
+  @@unique([sessionId, order])
+}
+
+model ChampionDraft {
+  id        String      @id @default(cuid())
+  matchId   String      @unique
+  match     Match       @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  status    DraftStatus @default(planned)
+  state     Json?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}

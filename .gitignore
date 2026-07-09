@@ -1,0 +1,25 @@
+# Environment files
+.env*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Testing and coverage
+coverage/
+tsconfig.tsbuildinfo
+
+# Prisma
+prisma/dev.db
+
+# OS/editor
+.DS_Store
+.idea/
