@@ -27,7 +27,7 @@ The public registration form captures:
 - Discord/contact handle.
 - Team name for team registration.
 - Teammate full name, student ID, university name, email, and contact handle.
-- Captcha placeholder token.
+- Cloudflare Turnstile captcha token.
 
 Rules:
 
@@ -69,6 +69,13 @@ Bracket generation uses approved teams for the selected game. Staff can regenera
 - Public veto page polls the API for updates.
 - LoL does not use map veto.
 
+## Cloudflare Turnstile
+
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` stores the public site key and is safe to expose to the browser.
+- `TURNSTILE_SECRET_KEY` stores the server-only secret key and must never be exposed publicly.
+- Production registration rejects submissions when `TURNSTILE_SECRET_KEY` is missing.
+- Local development falls back to a placeholder when Turnstile keys are not configured.
+
 ## Future Features
 
 - LoL champion draft:
@@ -76,8 +83,8 @@ Bracket generation uses approved teams for the selected game. Staff can regenera
   - Add side selection, pick/ban turn order, champion catalog import, and public draft viewer.
 - University SSO:
   - Replace app-local login after identity provider details are known.
-- Captcha provider:
-  - Replace placeholder verifier with Cloudflare Turnstile, hCaptcha, or reCAPTCHA.
+- Captcha operations:
+  - Add staff-visible captcha health checks and spam-rate monitoring.
 - Staff permissions:
   - Add granular roles, audit logs, and account management.
 - Tournament polish:

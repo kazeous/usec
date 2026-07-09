@@ -33,6 +33,7 @@ export function RegistrationForm({ settings }: { settings: RegistrationSetting[]
   const [mode, setMode] = useState<"solo" | "team">("team");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
   const [teammates, setTeammates] = useState<TeammateDraft[]>(Array.from({ length: 4 }, () => ({ ...emptyTeammate })));
 
   const currentSetting = settings.find((item) => item.game === game);
@@ -70,7 +71,7 @@ export function RegistrationForm({ settings }: { settings: RegistrationSetting[]
       discord: String(formData.get("discord") ?? ""),
       teamName: String(formData.get("teamName") ?? ""),
       teammates: mode === "team" ? visibleTeammates : [],
-      captchaToken: "placeholder-accepted"
+      captchaToken
     };
 
     const response = await fetch("/api/registration", {
@@ -90,6 +91,7 @@ export function RegistrationForm({ settings }: { settings: RegistrationSetting[]
     }
 
     event.currentTarget.reset();
+    setCaptchaToken("");
     setStatus("success");
     setMessage("Registration submitted. Staff will review it soon.");
   }
@@ -165,7 +167,7 @@ export function RegistrationForm({ settings }: { settings: RegistrationSetting[]
         </section>
       ) : null}
 
-      <CaptchaPlaceholder />
+      <CaptchaPlaceholder onTokenChange={setCaptchaToken} />
 
       {!currentSetting?.isOpen ? (
         <p className="rounded-md border border-[#d8a531] bg-[#fff4d5] p-3 text-sm font-bold text-[#6d4a00]">

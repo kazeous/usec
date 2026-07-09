@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { verifyCaptchaPlaceholder } from "@/lib/captcha";
+import { verifyTurnstileToken } from "@/lib/captcha";
 import { prisma } from "@/lib/db";
 import { normalizeRegistrationPayload } from "@/lib/validation";
 
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   }
 
   const parsed = parsedResult.value;
-  const captcha = await verifyCaptchaPlaceholder(parsed.captchaToken);
+  const captcha = await verifyTurnstileToken(parsed.captchaToken);
 
   if (!captcha.ok) {
     return NextResponse.json({ error: captcha.reason ?? "Captcha verification failed." }, { status: 400 });

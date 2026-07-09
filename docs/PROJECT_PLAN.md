@@ -65,5 +65,7 @@ npm run build
   - `DATABASE_URL`
   - `SESSION_SECRET`
   - `NEXT_PUBLIC_APP_NAME`
+  - `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+  - `TURNSTILE_SECRET_KEY`
 - Run `npm run db:push` or formal Prisma migrations before launch.
 - Run `npm run db:seed` once to create the initial admin, then change the seeded password.

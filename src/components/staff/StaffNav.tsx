@@ -1,12 +1,16 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ClipboardList, LogOut, Swords, Trophy } from "lucide-react";
 
 export function StaffNav({ name }: { name: string }) {
   return (
     <header className="border-b border-[#ded7ca] bg-[#151515] text-white">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-        <Link href="/staff" className="font-black">
-          USEC Staff
+        <Link href="/staff" className="flex items-center gap-3 font-black">
+          <span className="grid size-12 place-items-center rounded-md border border-white/20 bg-white p-1">
+            <Image className="size-full object-contain" src="/logoclb.png" alt="USEC logo" width={48} height={48} />
+          </span>
+          <span>USEC Staff</span>
         </Link>
         <nav className="flex flex-wrap items-center gap-2 text-sm font-semibold">
           <Link className="button border-white/20 bg-white/10 text-white" href="/staff/registrations">
