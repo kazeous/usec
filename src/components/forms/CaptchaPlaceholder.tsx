@@ -23,7 +23,13 @@ declare global {
   }
 }
 
-export function CaptchaPlaceholder({ onTokenChange }: { onTokenChange?: (token: string) => void }) {
+export function CaptchaPlaceholder({
+  onTokenChange,
+  resetSignal = 0
+}: {
+  onTokenChange?: (token: string) => void;
+  resetSignal?: number;
+}) {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetIdRef = useRef<string | null>(null);
@@ -55,6 +61,22 @@ export function CaptchaPlaceholder({ onTokenChange }: { onTokenChange?: (token: 
     };
   }, [onTokenChange, scriptReady, siteKey]);
 
+  useEffect(() => {
+    if (resetSignal === 0) {
+      return;
+    }
+
+    if (!siteKey) {
+      onTokenChange?.("local-placeholder-token");
+      return;
+    }
+
+    if (widgetIdRef.current && window.turnstile) {
+      onTokenChange?.("");
+      window.turnstile.reset(widgetIdRef.current);
+    }
+  }, [onTokenChange, resetSignal, siteKey]);
+
   if (siteKey) {
     return (
       <div className="grid gap-2">
@@ -62,7 +84,7 @@ export function CaptchaPlaceholder({ onTokenChange }: { onTokenChange?: (token: 
           src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
           async
           defer
-          onLoad={() => setScriptReady(true)}
+          onReady={() => setScriptReady(true)}
         />
         <div ref={containerRef} className="min-h-[65px]" />
       </div>

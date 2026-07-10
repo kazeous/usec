@@ -34,7 +34,7 @@ export function RegistrationForm({ settings }: { settings: RegistrationSetting[]
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
-  const [captchaInstance, setCaptchaInstance] = useState(0);
+  const [captchaResetSignal, setCaptchaResetSignal] = useState(0);
   const [teammates, setTeammates] = useState<TeammateDraft[]>(Array.from({ length: 4 }, () => ({ ...emptyTeammate })));
 
   const currentSetting = settings.find((item) => item.game === game);
@@ -97,20 +97,20 @@ export function RegistrationForm({ settings }: { settings: RegistrationSetting[]
         setStatus("error");
         setMessage(result.error ?? "Registration could not be submitted.");
         setCaptchaToken("");
-        setCaptchaInstance((current) => current + 1);
+        setCaptchaResetSignal((current) => current + 1);
         return;
       }
 
       form.reset();
       setCaptchaToken("");
-      setCaptchaInstance((current) => current + 1);
+      setCaptchaResetSignal((current) => current + 1);
       setStatus("success");
       setMessage("Registration submitted. Staff will review it soon.");
     } catch {
       setStatus("error");
       setMessage("Network error while submitting registration. Please try again.");
       setCaptchaToken("");
-      setCaptchaInstance((current) => current + 1);
+      setCaptchaResetSignal((current) => current + 1);
     }
   }
 
@@ -185,7 +185,7 @@ export function RegistrationForm({ settings }: { settings: RegistrationSetting[]
         </section>
       ) : null}
 
-      <CaptchaPlaceholder key={captchaInstance} onTokenChange={setCaptchaToken} />
+      <CaptchaPlaceholder onTokenChange={setCaptchaToken} resetSignal={captchaResetSignal} />
 
       {!currentSetting?.isOpen ? (
         <p className="rounded-md border border-[#d8a531] bg-[#fff4d5] p-3 text-sm font-bold text-[#6d4a00]">
