@@ -41,3 +41,15 @@ npm run typecheck
 npm run lint
 npm run build
 ```
+
+## Coolify deployment
+
+The production start command runs `prisma migrate deploy` before starting Next.js. Keep the repository's default `npm run start` command in Coolify and provide `DATABASE_URL` to both the build and runtime environments.
+
+For an existing disposable development database that predates the checked-in migration, run this once from the application terminal before redeploying:
+
+```bash
+npx prisma migrate reset --force
+```
+
+This deletes the existing schema, applies every migration, records the migration history, and runs the base seed. Never run this reset command against a database whose data must be preserved.
