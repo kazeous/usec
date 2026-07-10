@@ -20,7 +20,7 @@ export default async function HomePage() {
           <div className="absolute inset-0 bg-[url('/images/esports-world-cup.jpg')] bg-cover bg-center opacity-20" />
           <div className="relative mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1.1fr_0.9fr] lg:px-8">
             <div className="flex min-h-[28rem] flex-col justify-center">
-              <p className="mb-3 text-sm font-black uppercase text-cobalt">University Esports Club</p>
+              <p className="mb-3 text-sm font-black uppercase text-cobalt">VNU-HCMUS Esports Club</p>
               <h1 className="max-w-3xl text-4xl font-black leading-tight sm:text-6xl">
                 Register, seed, play, veto, and report matches in one club hub.
               </h1>

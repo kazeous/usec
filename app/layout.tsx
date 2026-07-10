@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "USEC Tournament Hub",
-  description: "University esports club registrations, brackets, and map veto.",
+  description: "VNU-HCMUS Esports Club registrations, brackets, and map veto.",
   icons: {
     icon: "/logoclb.png",
     shortcut: "/logoclb.png",

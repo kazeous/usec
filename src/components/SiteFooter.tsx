@@ -29,8 +29,8 @@ export function SiteFooter() {
             <Image className="size-full object-contain" src="/logoclb.png" alt="USEC logo" width={48} height={48} />
           </span>
           <div>
-            <p className="font-black">University Esports Club</p>
-            <p className="mt-1 text-sm text-white/60">Play together. Compete together.</p>
+            <p className="font-black">VNU-HCMUS Esports Club</p>
+            <p className="mt-1 text-sm text-white/60">Since 2014. this site wasn't made with love.</p>
           </div>
         </div>
         <nav aria-label="Social and contact links" className="flex flex-wrap gap-3">
