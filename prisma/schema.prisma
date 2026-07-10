@@ -120,8 +120,8 @@ model User {
   applicationReason      String?
   applicationSubmittedAt DateTime?
   sessions               Session[]
-  reviews                 StaffAccountReview[] @relation("ReviewedStaffAccount")
-  performedReviews        StaffAccountReview[] @relation("StaffAccountReviewer")
+  reviews                StaffAccountReview[] @relation("ReviewedStaffAccount")
+  performedReviews       StaffAccountReview[] @relation("StaffAccountReviewer")
   createdAt              DateTime             @default(now())
   updatedAt              DateTime             @updatedAt
 
@@ -210,9 +210,10 @@ model RegistrationMember {
   registrationId String
   registration   Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
   fullName       String
+  inGameName     String
   studentId      String
   universityName String
-  email          String
+  email          String?
   discord        String?
   isCaptain      Boolean      @default(false)
   createdAt      DateTime     @default(now())
@@ -241,9 +242,10 @@ model Player {
   teamId         String
   team           Team                    @relation(fields: [teamId], references: [id], onDelete: Cascade)
   fullName       String
+  inGameName     String
   studentId      String
   universityName String
-  email          String
+  email          String?
   discord        String?
   isCaptain      Boolean                 @default(false)
   entrySnapshots TournamentEntryPlayer[]
@@ -282,9 +284,10 @@ model TournamentEntryPlayer {
   playerId       String
   player         Player          @relation(fields: [playerId], references: [id], onDelete: Restrict)
   fullName       String
+  inGameName     String
   studentId      String
   universityName String
-  email          String
+  email          String?
   discord        String?
   isCaptain      Boolean         @default(false)
 

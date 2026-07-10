@@ -22,7 +22,7 @@ async function assertTournamentEditable(tx: Tx, tournamentId: string) {
 async function assertRosterAvailable(
   tx: Tx,
   tournamentId: string,
-  players: Array<{ studentId: string; email: string }>,
+  players: Array<{ studentId: string; email: string | null }>,
   excludedEntryId?: string
 ) {
   const conflict = await tx.tournamentEntryPlayer.findFirst({
@@ -30,7 +30,7 @@ async function assertRosterAvailable(
       entry: { tournamentId, ...(excludedEntryId ? { id: { not: excludedEntryId } } : {}) },
       OR: [
         { studentId: { in: players.map((player) => player.studentId) } },
-        { email: { in: players.map((player) => player.email.toLowerCase()) } }
+        { email: { in: players.flatMap((player) => player.email ? [player.email.toLowerCase()] : []) } }
       ]
     }
   });
@@ -57,9 +57,10 @@ async function createEntrySnapshot(tx: Tx, tournamentId: string, teamId: string)
         create: team.players.map((player) => ({
           playerId: player.id,
           fullName: player.fullName,
+          inGameName: player.inGameName,
           studentId: player.studentId,
           universityName: player.universityName,
-          email: player.email.toLowerCase(),
+          email: player.email?.toLowerCase(),
           discord: player.discord,
           isCaptain: player.isCaptain
         }))
@@ -106,6 +107,7 @@ export async function reviewRegistration(input: {
           players: {
             create: registration.members.map((member) => ({
               fullName: member.fullName,
+              inGameName: member.inGameName,
               studentId: member.studentId,
               universityName: member.universityName,
               email: member.email,
@@ -158,6 +160,7 @@ export async function assembleSoloTeam(input: { tournamentId: string; registrati
         players: {
           create: members.map((member, index) => ({
             fullName: member.fullName,
+            inGameName: member.inGameName,
             studentId: member.studentId,
             universityName: member.universityName,
             email: member.email,

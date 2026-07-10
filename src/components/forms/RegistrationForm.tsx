@@ -7,8 +7,8 @@ import { gameConfigs } from "@/lib/game-config";
 import type { Game } from "@/lib/types";
 
 type RegistrationTournament = { id: string; title: string; game: Game; registrationMessage?: string | null };
-type MemberDraft = { fullName: string; studentId: string; universityName: string; email: string; discord: string };
-const emptyMember: MemberDraft = { fullName: "", studentId: "", universityName: "", email: "", discord: "" };
+type MemberDraft = { fullName: string; inGameName: string; studentId: string; universityName: string; discord: string };
+const emptyMember: MemberDraft = { fullName: "", inGameName: "", studentId: "", universityName: "", discord: "" };
 
 export function RegistrationForm({ tournaments, initialTournamentId }: { tournaments: RegistrationTournament[]; initialTournamentId?: string }) {
   const initial = tournaments.some((item) => item.id === initialTournamentId) ? initialTournamentId! : tournaments[0]?.id ?? "";
@@ -48,6 +48,7 @@ export function RegistrationForm({ tournaments, initialTournamentId }: { tournam
     const data = new FormData(form);
     const captain = {
       fullName: String(data.get("fullName") ?? ""),
+      inGameName: String(data.get("inGameName") ?? ""),
       studentId: String(data.get("studentId") ?? ""),
       universityName: String(data.get("universityName") ?? ""),
       email: String(data.get("email") ?? ""),
@@ -104,9 +105,10 @@ export function RegistrationForm({ tournaments, initialTournamentId }: { tournam
       {mode === "team" ? <Field id="teamName" label="Team name" /> : null}
       <div className="grid gap-4 md:grid-cols-2">
         <Field id="fullName" label={mode === "team" ? "Captain full name" : "Full name"} />
+        <Field id="inGameName" label="In-game name" placeholder="riot#id" />
         <Field id="studentId" label="Student ID" />
         <Field id="universityName" label="University name" />
-        <Field id="email" label="Email" type="email" />
+        <Field id="email" label={mode === "team" ? "Captain email" : "Email"} type="email" />
         <Field id="discord" label="Discord or contact handle" required={false} />
       </div>
 
@@ -116,8 +118,8 @@ export function RegistrationForm({ tournaments, initialTournamentId }: { tournam
           {visibleTeammates.map((member, index) => (
             <div key={index} className="grid gap-3 rounded-md border border-[#ded7ca] bg-[#fffdf8] p-4 md:grid-cols-2">
               <p className="md:col-span-2 text-sm font-black">Player {index + 2}</p>
-              {(["fullName", "studentId", "universityName", "email", "discord"] as const).map((field) => (
-                <input key={field} className={field === "discord" ? "field md:col-span-2" : "field"} type={field === "email" ? "email" : "text"} required={field !== "discord"} placeholder={{ fullName: "Full name", studentId: "Student ID", universityName: "University name", email: "Email", discord: "Discord/contact handle" }[field]} value={member[field]} onChange={(event) => updateTeammate(index, field, event.target.value)} />
+              {(["fullName", "inGameName", "studentId", "universityName", "discord"] as const).map((field) => (
+                <input key={field} className={field === "discord" ? "field md:col-span-2" : "field"} type="text" required={field !== "discord"} placeholder={{ fullName: "Full name", inGameName: "In-game name (riot#id)", studentId: "Student ID", universityName: "University name", discord: "Discord/contact handle" }[field]} value={member[field]} onChange={(event) => updateTeammate(index, field, event.target.value)} />
               ))}
             </div>
           ))}
@@ -131,6 +133,6 @@ export function RegistrationForm({ tournaments, initialTournamentId }: { tournam
   );
 }
 
-function Field({ id, label, type = "text", required = true }: { id: string; label: string; type?: string; required?: boolean }) {
-  return <label className="grid gap-2 text-sm font-bold" htmlFor={id}>{label}<input className="field" id={id} name={id} type={type} required={required} /></label>;
+function Field({ id, label, type = "text", required = true, placeholder }: { id: string; label: string; type?: string; required?: boolean; placeholder?: string }) {
+  return <label className="grid gap-2 text-sm font-bold" htmlFor={id}>{label}<input className="field" id={id} name={id} type={type} required={required} placeholder={placeholder} /></label>;
 }

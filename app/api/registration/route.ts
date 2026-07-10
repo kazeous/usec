@@ -21,7 +21,7 @@ export async function POST(request: Request) {
         registration: { tournamentId: tournament.id, status: { not: "rejected" } },
         OR: [
           { studentId: { in: parsed.members.map((member) => member.studentId) } },
-          { email: { in: parsed.members.map((member) => member.email) } }
+          { email: { in: parsed.members.flatMap((member) => member.email ? [member.email] : []) } }
         ]
       }
     });

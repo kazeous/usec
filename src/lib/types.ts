@@ -89,9 +89,10 @@ export type PublicTournament = {
 
 export type RegistrationMemberInput = {
   fullName: string;
+  inGameName: string;
   studentId: string;
   universityName: string;
-  email: string;
+  email?: string;
   discord?: string;
   isCaptain?: boolean;
 };

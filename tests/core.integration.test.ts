@@ -34,7 +34,7 @@ describe.skipIf(!runDatabaseTests).sequential("database-backed core workflow", (
           game: "valorant",
           mode: "solo",
           status: "approved",
-          members: { create: { fullName: `Solo ${index}`, studentId: `INT-SOLO-${suffix}-${index}`, universityName: "Integration University", email: `solo-${suffix}-${index}@example.edu`, isCaptain: true } }
+          members: { create: { fullName: `Solo ${index}`, inGameName: `solo${index}#TEST`, studentId: `INT-SOLO-${suffix}-${index}`, universityName: "Integration University", email: `solo-${suffix}-${index}@example.edu`, isCaptain: true } }
         }
       });
       registrationIds.push(registration.id);
@@ -92,7 +92,7 @@ describe.skipIf(!runDatabaseTests).sequential("database-backed core workflow", (
         id: `integration-team-${suffix}`,
         game: "valorant",
         name: "Integration Five",
-        players: { create: Array.from({ length: 5 }, (_, index) => ({ fullName: `Team Player ${index}`, studentId: `INT-TEAM-${suffix}-${index}`, universityName: "Integration University", email: `team-${suffix}-${index}@example.edu`, isCaptain: index === 0 })) }
+        players: { create: Array.from({ length: 5 }, (_, index) => ({ fullName: `Team Player ${index}`, inGameName: `team${index}#TEST`, studentId: `INT-TEAM-${suffix}-${index}`, universityName: "Integration University", email: `team-${suffix}-${index}@example.edu`, isCaptain: index === 0 })) }
       }
     });
     createdTeamIds.push(team.id);
@@ -116,7 +116,7 @@ describe.skipIf(!runDatabaseTests).sequential("database-backed core workflow", (
           id: `integration-double-team-${suffix}-${teamIndex}`,
           game: "cs2",
           name: `Double Team ${teamIndex + 1}`,
-          players: { create: Array.from({ length: 5 }, (_, playerIndex) => ({ fullName: `Double ${teamIndex}-${playerIndex}`, studentId: `INT-DOUBLE-${suffix}-${teamIndex}-${playerIndex}`, universityName: "Integration University", email: `double-${suffix}-${teamIndex}-${playerIndex}@example.edu`, isCaptain: playerIndex === 0 })) }
+          players: { create: Array.from({ length: 5 }, (_, playerIndex) => ({ fullName: `Double ${teamIndex}-${playerIndex}`, inGameName: `double${teamIndex}${playerIndex}#TEST`, studentId: `INT-DOUBLE-${suffix}-${teamIndex}-${playerIndex}`, universityName: "Integration University", email: `double-${suffix}-${teamIndex}-${playerIndex}@example.edu`, isCaptain: playerIndex === 0 })) }
         }
       });
       createdTeamIds.push(team.id);
@@ -147,7 +147,7 @@ describe.skipIf(!runDatabaseTests).sequential("database-backed core workflow", (
           id: `integration-swiss-team-${suffix}-${teamIndex}`,
           game: "valorant",
           name: `Swiss Team ${teamIndex + 1}`,
-          players: { create: Array.from({ length: 5 }, (_, playerIndex) => ({ fullName: `Swiss ${teamIndex}-${playerIndex}`, studentId: `INT-SWISS-${suffix}-${teamIndex}-${playerIndex}`, universityName: "Integration University", email: `swiss-${suffix}-${teamIndex}-${playerIndex}@example.edu`, isCaptain: playerIndex === 0 })) }
+          players: { create: Array.from({ length: 5 }, (_, playerIndex) => ({ fullName: `Swiss ${teamIndex}-${playerIndex}`, inGameName: `swiss${teamIndex}${playerIndex}#TEST`, studentId: `INT-SWISS-${suffix}-${teamIndex}-${playerIndex}`, universityName: "Integration University", email: `swiss-${suffix}-${teamIndex}-${playerIndex}@example.edu`, isCaptain: playerIndex === 0 })) }
         }
       });
       createdTeamIds.push(team.id);

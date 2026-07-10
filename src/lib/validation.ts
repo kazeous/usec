@@ -16,9 +16,13 @@ export type StaffApplicationInput = z.infer<typeof staffApplicationSchema>;
 
 export const registrationMemberSchema = z.object({
   fullName: z.string().trim().min(2, "Full name is required.").max(100),
+  inGameName: z.string().trim().min(2, "In-game name is required.").max(100),
   studentId: z.string().trim().min(2, "Student ID is required.").max(50).transform((value) => value.toUpperCase()),
   universityName: z.string().trim().min(2, "University name is required.").max(150),
-  email: z.string().trim().email("Valid email is required.").transform((value) => value.toLowerCase()),
+  email: z.preprocess(
+    (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
+    z.string().trim().email("Enter a valid captain email.").transform((value) => value.toLowerCase()).optional()
+  ),
   discord: z.string().trim().max(100).optional(),
   isCaptain: z.boolean().default(false)
 });
@@ -50,8 +54,12 @@ export const registrationSchema = z
     if (value.members.filter((member) => member.isCaptain).length !== 1) {
       context.addIssue({ code: z.ZodIssueCode.custom, path: ["members"], message: "Exactly one roster member must be the captain." });
     }
+    const captainIndex = value.members.findIndex((member) => member.isCaptain);
+    if (captainIndex >= 0 && !value.members[captainIndex].email) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["members", captainIndex, "email"], message: "Captain email is required." });
+    }
     const studentIds = value.members.map((member) => member.studentId.toLowerCase());
-    const emails = value.members.map((member) => member.email.toLowerCase());
+    const emails = value.members.flatMap((member) => member.email ? [member.email.toLowerCase()] : []);
     if (new Set(studentIds).size !== studentIds.length) {
       context.addIssue({ code: z.ZodIssueCode.custom, path: ["members"], message: "Student IDs must be unique within the roster." });
     }
@@ -77,6 +85,7 @@ export function registrationMembersFromLegacy(input: {
   studentId: string;
   universityName: string;
   email: string;
+  inGameName: string;
   discord?: string;
   teammates?: TeammateInput[];
 }): RegistrationMemberInput[] {
@@ -85,6 +94,7 @@ export function registrationMembersFromLegacy(input: {
       fullName: input.fullName,
       studentId: input.studentId,
       universityName: input.universityName,
+      inGameName: input.inGameName,
       email: input.email,
       discord: input.discord,
       isCaptain: true

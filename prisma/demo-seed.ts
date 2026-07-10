@@ -34,6 +34,7 @@ async function main() {
       const teamId = `demo-team-${spec.game}-${spec.format}-${index + 1}`;
       const players = Array.from({ length: 5 }, (_, playerIndex) => ({
         fullName: `${name} Player ${playerIndex + 1}`,
+        inGameName: `${slug(name)}${playerIndex + 1}#USEC`,
         studentId: `${slug(name).slice(0, 8)}-${playerIndex + 1}`,
         universityName: "HCMUS",
         email: `${slug(name)}-${playerIndex + 1}@demo.usec.local`,
@@ -51,6 +52,7 @@ async function main() {
             create: team.players.map((player) => ({
               playerId: player.id,
               fullName: player.fullName,
+              inGameName: player.inGameName,
               studentId: player.studentId,
               universityName: player.universityName,
               email: player.email,
