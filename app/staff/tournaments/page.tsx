@@ -16,13 +16,13 @@ export default async function StaffTournamentsPage() {
 
   return (
     <>
-      <StaffNav name={staff.name} />
+      <StaffNav name={staff.name} role={staff.role} />
       <main className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:px-8">
         <div>
           <h1 className="text-4xl font-black">Tournaments</h1>
-          <p className="mt-2 muted">Create events and generate brackets from approved registrations.</p>
+          <p className="mt-2 muted">{staff.role === "admin" ? "Create events and generate brackets from approved registrations." : "Open tournament brackets and match-day tools."}</p>
         </div>
-        <TournamentCreateForm />
+        {staff.role === "admin" ? <TournamentCreateForm /> : null}
         <section className="grid gap-4 md:grid-cols-2">
           {tournaments.map((tournament) => (
             <Link className="panel p-5 transition hover:border-[#335cba]" href={`/staff/tournaments/${tournament.id}`} key={tournament.id}>

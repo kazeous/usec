@@ -18,6 +18,10 @@ export async function verifyPassword(password: string, passwordHash: string) {
 }
 
 export async function createStaffSession(userId: string) {
+  const user = await prisma.user.findFirst({ where: { id: userId, accountStatus: "approved" }, select: { id: true } });
+  if (!user) {
+    throw new Error("Only approved accounts can create a session.");
+  }
   const token = randomBytes(32).toString("base64url");
   const tokenHash = hashToken(token);
   const expiresAt = new Date(Date.now() + sessionDurationMs);
@@ -71,7 +75,7 @@ export async function getCurrentStaff() {
     }
   });
 
-  if (!session || session.expiresAt < new Date()) {
+  if (!session || session.expiresAt < new Date() || session.user.accountStatus !== "approved") {
     if (session) {
       await prisma.session.delete({ where: { id: session.id } }).catch(() => null);
     }
@@ -89,6 +93,15 @@ export async function requireStaff() {
   const staff = await getCurrentStaff();
   if (!staff) {
     redirect("/staff/login");
+  }
+
+  return staff;
+}
+
+export async function requireAdmin() {
+  const staff = await requireStaff();
+  if (staff.role !== "admin") {
+    redirect("/staff");
   }
 
   return staff;

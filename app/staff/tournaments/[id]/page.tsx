@@ -16,13 +16,25 @@ export default async function StaffTournamentDetailPage({ params }: { params: Pr
   const { id } = await params;
   const tournament = await getStaffTournament(id);
   if (!tournament) notFound();
-  const [teams, solos] = await Promise.all([
+  const [teams, solos] = staff.role === "admin" ? await Promise.all([
     prisma.team.findMany({ where: { game: tournament.game }, select: { id: true, name: true, game: true }, orderBy: { name: "asc" } }),
     prisma.registration.findMany({
       where: { tournamentId: id, mode: "solo", status: "approved", resolvedTeamId: null },
       include: { members: true },
       orderBy: { createdAt: "asc" }
     })
-  ]);
-  return <><StaffNav name={staff.name} /><main className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:px-8"><Link className="inline-flex items-center gap-2 text-sm font-bold muted" href="/staff/tournaments"><ArrowLeft size={16} aria-hidden />Tournaments</Link><div><h1 className="text-4xl font-black">{tournament.title}</h1><p className="mt-2 muted">Manage registration, entrants, seeds, competition, scores, and standings.</p></div><TournamentOperations tournament={tournament} entries={tournament.entries} teams={teams} solos={solos.map((registration) => ({ id: registration.id, name: registration.members[0]?.fullName ?? "Solo player" }))} /><StandingsTable standings={tournament.standings} swiss={tournament.format === "swiss"} /><BracketView matches={tournament.matches} staff /></main></>;
+  ]) : [[], []];
+
+  return (
+    <>
+      <StaffNav name={staff.name} role={staff.role} />
+      <main className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:px-8">
+        <Link className="inline-flex items-center gap-2 text-sm font-bold muted" href="/staff/tournaments"><ArrowLeft size={16} aria-hidden />Tournaments</Link>
+        <div><h1 className="text-4xl font-black">{tournament.title}</h1><p className="mt-2 muted">{staff.role === "admin" ? "Manage registration, entrants, seeds, competition, scores, and standings." : "View the bracket and open matches to manage scores or vetoes."}</p></div>
+        {staff.role === "admin" ? <TournamentOperations tournament={tournament} entries={tournament.entries} teams={teams} solos={solos.map((registration) => ({ id: registration.id, name: registration.members[0]?.fullName ?? "Solo player" }))} /> : null}
+        <StandingsTable standings={tournament.standings} swiss={tournament.format === "swiss"} />
+        <BracketView matches={tournament.matches} staff />
+      </main>
+    </>
+  );
 }

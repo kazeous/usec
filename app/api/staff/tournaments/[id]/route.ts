@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { apiErrorResponse, ApiError, requireStaffApi } from "@/lib/http";
+import { apiErrorResponse, ApiError, requireAdminApi } from "@/lib/http";
 import { tournamentStatuses } from "@/lib/types";
 
 const updateSchema = z.object({
@@ -25,7 +25,7 @@ const transitions: Record<string, string[]> = {
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireStaffApi(request);
+    await requireAdminApi(request);
     const { id } = await params;
     const payload = updateSchema.parse(await request.json());
     const current = await prisma.tournament.findUnique({ where: { id } });

@@ -173,11 +173,12 @@ function toMatchDetail(match: MatchWithDetails): AppMatchDetail {
 }
 
 export async function getStaffStats() {
-  const [registrations, pending, tournaments, liveMatches] = await Promise.all([
+  const [registrations, pending, tournaments, liveMatches, staffApplications] = await Promise.all([
     prisma.registration.count(),
     prisma.registration.count({ where: { status: "pending" } }),
     prisma.tournament.count(),
-    prisma.match.count({ where: { status: { in: ["scheduled", "veto", "live"] } } })
+    prisma.match.count({ where: { status: { in: ["scheduled", "veto", "live"] } } }),
+    prisma.user.count({ where: { role: "staff", accountStatus: "pending" } })
   ]);
-  return { registrations, pending, tournaments, liveMatches };
+  return { registrations, pending, tournaments, liveMatches, staffApplications };
 }

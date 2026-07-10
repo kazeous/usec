@@ -12,6 +12,17 @@ enum UserRole {
   admin
 }
 
+enum AccountStatus {
+  pending
+  approved
+  rejected
+}
+
+enum StaffReviewAction {
+  approved
+  rejected
+}
+
 enum Game {
   valorant
   cs2
@@ -98,14 +109,37 @@ enum DraftStatus {
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  name         String
-  passwordHash String
-  role         UserRole  @default(staff)
-  sessions     Session[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id                     String               @id @default(cuid())
+  email                  String               @unique
+  name                   String
+  passwordHash           String
+  role                   UserRole             @default(staff)
+  accountStatus          AccountStatus        @default(pending)
+  studentId              String?              @unique
+  universityName         String?
+  applicationReason      String?
+  applicationSubmittedAt DateTime?
+  sessions               Session[]
+  reviews                 StaffAccountReview[] @relation("ReviewedStaffAccount")
+  performedReviews        StaffAccountReview[] @relation("StaffAccountReviewer")
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+
+  @@index([role, accountStatus, applicationSubmittedAt])
+}
+
+model StaffAccountReview {
+  id             String            @id @default(cuid())
+  userId         String
+  user           User              @relation("ReviewedStaffAccount", fields: [userId], references: [id], onDelete: Cascade)
+  reviewerUserId String
+  reviewer       User              @relation("StaffAccountReviewer", fields: [reviewerUserId], references: [id], onDelete: Restrict)
+  action         StaffReviewAction
+  note           String?
+  createdAt      DateTime          @default(now())
+
+  @@index([userId, createdAt])
+  @@index([reviewerUserId])
 }
 
 model Session {

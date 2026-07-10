@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { apiErrorResponse, requireStaffApi } from "@/lib/http";
+import { apiErrorResponse, requireAdminApi, requireStaffApi } from "@/lib/http";
 import { games, tournamentFormats } from "@/lib/types";
 
 const createSchema = z.object({
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    await requireStaffApi(request);
+    await requireAdminApi(request);
     const payload = createSchema.parse(await request.json());
     const tournament = await prisma.tournament.create({
       data: {

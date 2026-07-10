@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { apiErrorResponse, requireStaffApi } from "@/lib/http";
+import { apiErrorResponse, requireAdminApi } from "@/lib/http";
 import { enrollExistingTeam, removeTournamentEntry, updateEntrySeed } from "@/lib/registrations/service";
 
 const createSchema = z.object({ teamId: z.string().min(1) });
@@ -9,7 +9,7 @@ const removeSchema = z.object({ entryId: z.string().min(1) });
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireStaffApi(request);
+    await requireAdminApi(request);
     const { id } = await params;
     const { teamId } = createSchema.parse(await request.json());
     return NextResponse.json(await enrollExistingTeam(id, teamId), { status: 201 });
@@ -18,7 +18,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireStaffApi(request);
+    await requireAdminApi(request);
     const { id } = await params;
     const payload = seedSchema.parse(await request.json());
     return NextResponse.json(await updateEntrySeed(id, payload.entryId, payload.seed));
@@ -27,7 +27,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireStaffApi(request);
+    await requireAdminApi(request);
     const { id } = await params;
     const payload = removeSchema.parse(await request.json());
     await removeTournamentEntry(id, payload.entryId);

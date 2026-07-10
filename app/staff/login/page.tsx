@@ -14,6 +14,7 @@ export default function StaffLoginPage() {
         <p className="mt-2 muted">Use your club staff account to manage registrations, brackets, and matches.</p>
       </div>
       <LoginForm />
+      <p className="mt-5 text-center text-sm muted">Need staff access? <Link className="font-bold text-[#335cba]" href="/staff/register">Apply for an account</Link>.</p>
     </main>
   );
 }

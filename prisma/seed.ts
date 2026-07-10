@@ -7,8 +7,8 @@ async function main() {
   const passwordHash = await bcrypt.hash("ChangeMe123!", 12);
   await prisma.user.upsert({
     where: { email: "admin@usec.local" },
-    update: {},
-    create: { email: "admin@usec.local", name: "USEC Admin", passwordHash, role: "admin" }
+    update: { role: "admin", accountStatus: "approved" },
+    create: { email: "admin@usec.local", name: "USEC Admin", passwordHash, role: "admin", accountStatus: "approved" }
   });
   await prisma.tournament.upsert({
     where: { id: "sample-valorant-open" },

@@ -22,6 +22,12 @@ export async function POST(request: Request) {
       throw new ApiError("Invalid staff credentials.", 401, "invalid_credentials");
     }
     await prisma.loginAttempt.deleteMany({ where: { key } });
+    if (user.accountStatus === "pending") {
+      throw new ApiError("Your staff application is still waiting for administrator approval.", 403, "approval_pending");
+    }
+    if (user.accountStatus === "rejected") {
+      throw new ApiError("Your staff application was rejected. You may update and resubmit it.", 403, "account_rejected");
+    }
     await createStaffSession(user.id);
     return NextResponse.json({ ok: true });
   } catch (error) { return apiErrorResponse(error); }

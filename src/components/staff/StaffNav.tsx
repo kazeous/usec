@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ClipboardList, LogOut, Swords, Trophy } from "lucide-react";
+import { ClipboardList, LogOut, ShieldCheck, Swords, Trophy } from "lucide-react";
 
-export function StaffNav({ name }: { name: string }) {
+export function StaffNav({ name, role }: { name: string; role: "staff" | "admin" }) {
   return (
     <header className="border-b border-[#ded7ca] bg-[#151515] text-white">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
@@ -21,6 +21,7 @@ export function StaffNav({ name }: { name: string }) {
             <Trophy size={16} aria-hidden />
             Tournaments
           </Link>
+          {role === "admin" ? <Link className="button border-white/20 bg-white/10 text-white" href="/staff/accounts"><ShieldCheck size={16} aria-hidden />Accounts</Link> : null}
           <Link className="button border-white/20 bg-white/10 text-white" href="/tournaments">
             <Swords size={16} aria-hidden />
             Public

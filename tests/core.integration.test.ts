@@ -1,7 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { assembleSoloTeam, enrollExistingTeam } from "@/lib/registrations/service";
 import { generateNextSwissRound, generateTournamentCompetition, recordMatchScore, rollbackMatchResult } from "@/lib/tournaments/service";
+import { reviewStaffApplication, submitStaffApplication } from "@/lib/staff-accounts";
 
 const runDatabaseTests = process.env.RUN_DB_TESTS === "1";
 
@@ -13,8 +15,14 @@ describe.skipIf(!runDatabaseTests).sequential("database-backed core workflow", (
   const swissTournamentId = `integration-swiss-${suffix}`;
   const registrationIds: string[] = [];
   const createdTeamIds: string[] = [];
+  const createdUserIds: string[] = [];
+  let adminUserId = "";
 
   beforeAll(async () => {
+    const passwordHash = await bcrypt.hash("integration-admin-password", 4);
+    const admin = await prisma.user.create({ data: { email: `integration-admin-${suffix}@example.edu`, name: "Integration Admin", passwordHash, role: "admin", accountStatus: "approved" } });
+    adminUserId = admin.id;
+    createdUserIds.push(admin.id);
     await prisma.tournament.create({ data: { id: tournamentId, title: "Integration Cup", game: "valorant", format: "single_elimination", status: "registration", registrationOpen: true } });
     await prisma.tournament.create({ data: { id: reuseTournamentId, title: "Reuse Cup", game: "valorant", format: "round_robin", status: "draft" } });
     await prisma.tournament.create({ data: { id: doubleTournamentId, title: "Double Cup", game: "cs2", format: "double_elimination", status: "draft" } });
@@ -36,6 +44,37 @@ describe.skipIf(!runDatabaseTests).sequential("database-backed core workflow", (
   afterAll(async () => {
     await prisma.tournament.deleteMany({ where: { id: { in: [tournamentId, reuseTournamentId, doubleTournamentId, swissTournamentId] } } });
     await prisma.team.deleteMany({ where: { id: { in: createdTeamIds } } });
+    await prisma.staffAccountReview.deleteMany({ where: { OR: [{ userId: { in: createdUserIds } }, { reviewerUserId: { in: createdUserIds } }] } });
+    await prisma.user.deleteMany({ where: { id: { in: createdUserIds } } });
+  });
+
+  it("submits, rejects, resubmits, and approves a staff application while retaining review history", async () => {
+    const email = `staff-applicant-${suffix}@example.edu`;
+    const password = "integration-staff-password";
+    const input = {
+      name: "Integration Staff",
+      email,
+      studentId: `STAFF-${suffix}`.toUpperCase(),
+      universityName: "Integration University",
+      password,
+      applicationReason: "I want to help operate integration test tournaments."
+    };
+    const application = await submitStaffApplication(input);
+    createdUserIds.push(application.id);
+    const pending = await prisma.user.findUniqueOrThrow({ where: { id: application.id } });
+    expect(pending.accountStatus).toBe("pending");
+    expect(pending.passwordHash).not.toBe(password);
+    expect(await bcrypt.compare(password, pending.passwordHash)).toBe(true);
+
+    await reviewStaffApplication({ userId: application.id, reviewerUserId: adminUserId, action: "rejected", note: "Please add more context." });
+    await expect(submitStaffApplication({ ...input, password: "incorrect-password" })).rejects.toMatchObject({ status: 401 });
+    await submitStaffApplication({ ...input, applicationReason: "I added more context and still want to help operate events." });
+    expect((await prisma.user.findUniqueOrThrow({ where: { id: application.id } })).accountStatus).toBe("pending");
+    expect(await prisma.staffAccountReview.count({ where: { userId: application.id } })).toBe(1);
+
+    await reviewStaffApplication({ userId: application.id, reviewerUserId: adminUserId, action: "approved", note: "Approved for operations." });
+    expect((await prisma.user.findUniqueOrThrow({ where: { id: application.id } })).accountStatus).toBe("approved");
+    expect(await prisma.staffAccountReview.count({ where: { userId: application.id } })).toBe(2);
   });
 
   it("assembles five approved solos and reuses the team in another event", async () => {

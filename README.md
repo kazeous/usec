@@ -26,11 +26,11 @@ The seed creates `admin@usec.local` with password `ChangeMe123!`. Change it befo
 
 ## Core workflow
 
-1. Staff creates a tournament and moves it from draft to registration.
-2. Players submit a team or solo registration for that tournament.
-3. Staff approves team rosters, links reusable teams, or combines five approved solos.
-4. Staff enrolls and seeds confirmed entries, then generates single elimination, double elimination, round robin, or the first Swiss round.
-5. Staff records terminal series results. Elimination outcomes follow persisted winner/loser routes; round-robin and Swiss results update standings.
+1. Prospective staff apply publicly and wait for an administrator to approve their account.
+2. Administrators create tournaments, manage entrants and seeds, and generate brackets.
+3. Players submit a team or solo registration for a tournament, which approved staff can review.
+4. Approved staff run match-day scoring and veto operations; administrators retain all staff capabilities.
+5. Elimination outcomes follow persisted winner/loser routes; round-robin and Swiss results update standings.
 6. Swiss events generate each later round only after the previous round completes. Valorant and CS2 matches can run the BO3 map veto flow.
 
 ## Verification

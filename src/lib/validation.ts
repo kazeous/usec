@@ -2,6 +2,18 @@ import { z } from "zod";
 import { gameConfigs } from "@/lib/game-config";
 import { games, registrationModes, type Game, type RegistrationMemberInput, type TeammateInput } from "@/lib/types";
 
+export const staffApplicationSchema = z.object({
+  name: z.string().trim().min(2, "Full name is required.").max(100),
+  email: z.string().trim().email("Valid email is required.").transform((value) => value.toLowerCase()),
+  studentId: z.string().trim().min(2, "Student ID is required.").max(50).transform((value) => value.toUpperCase()),
+  universityName: z.string().trim().min(2, "University name is required.").max(150),
+  password: z.string().min(8, "Password must be at least 8 characters.").max(72, "Password must be no more than 72 characters."),
+  applicationReason: z.string().trim().min(10, "Please provide a short reason for applying.").max(500),
+  captchaToken: z.string().trim().optional()
+});
+
+export type StaffApplicationInput = z.infer<typeof staffApplicationSchema>;
+
 export const registrationMemberSchema = z.object({
   fullName: z.string().trim().min(2, "Full name is required.").max(100),
   studentId: z.string().trim().min(2, "Student ID is required.").max(50).transform((value) => value.toUpperCase()),

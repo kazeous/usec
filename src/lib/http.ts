@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { getCurrentStaffForApi } from "@/lib/auth";
+import { ApiError } from "@/lib/errors";
 
-export class ApiError extends Error {
-  constructor(message: string, public status = 400, public code = "invalid_request") {
-    super(message);
-  }
-}
+export { ApiError } from "@/lib/errors";
 
 export function assertSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
@@ -20,6 +17,12 @@ export async function requireStaffApi(request: Request) {
   assertSameOrigin(request);
   const staff = await getCurrentStaffForApi();
   if (!staff) throw new ApiError("Authentication required.", 401, "unauthorized");
+  return staff;
+}
+
+export async function requireAdminApi(request: Request) {
+  const staff = await requireStaffApi(request);
+  if (staff.role !== "admin") throw new ApiError("Administrator access required.", 403, "forbidden");
   return staff;
 }
 
