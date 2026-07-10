@@ -22,10 +22,10 @@ export default async function HomePage() {
             <div className="flex min-h-[28rem] flex-col justify-center">
               <p className="mb-3 text-sm font-black uppercase text-cobalt">VNU-HCMUS Esports Club</p>
               <h1 className="max-w-3xl text-4xl font-black leading-tight sm:text-6xl">
-                Register, seed, play, veto, and report matches in one club hub.
+                Registration portal for USEC&apos;s tournament.
               </h1>
               <p className="mt-5 max-w-2xl text-lg muted">
-                Built for Valorant, CS2, and LoL events with staff-controlled registration and brackets students can follow.
+                Click register for opening tournament, View brackets for yours&apos; joined match.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
                 <Link className="button button-primary" href="/register">
