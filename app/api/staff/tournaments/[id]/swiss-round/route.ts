@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { apiErrorResponse, requireStaffApi } from "@/lib/http";
-import { generateTournamentCompetition } from "@/lib/tournaments/service";
+import { generateNextSwissRound } from "@/lib/tournaments/service";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireStaffApi(request);
     const { id } = await params;
-    return NextResponse.json(await generateTournamentCompetition(id));
+    return NextResponse.json(await generateNextSwissRound(id));
   } catch (error) { return apiErrorResponse(error); }
 }

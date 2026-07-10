@@ -52,7 +52,7 @@ export default async function HomePage() {
                     </span>
                   </div>
                   <div className="grid grid-cols-3 gap-3 text-center">
-                    <Metric value={featured.teams.length} label="Teams" />
+                    <Metric value={featured.entries.length} label="Teams" />
                     <Metric value={featured.matches.length} label="Matches" />
                     <Metric value={featured.registrationOpen ? "Open" : "Closed"} label="Reg" />
                   </div>
@@ -69,7 +69,7 @@ export default async function HomePage() {
         </section>
 
         <section className="mx-auto grid max-w-7xl gap-4 px-4 py-8 sm:px-6 md:grid-cols-3 lg:px-8">
-          <Feature icon={<ClipboardList size={20} aria-hidden />} title="University registration" text="Student ID, university name, roster details, and captcha placeholder are included from the start." />
+          <Feature icon={<ClipboardList size={20} aria-hidden />} title="Event registration" text="Tournament-specific team and solo registration includes normalized student rosters and Turnstile protection." />
           <Feature icon={<Brackets size={20} aria-hidden />} title="Auto brackets" text="Single elimination, double elimination, round robin, and Swiss generators are wired into staff workflows." />
           <Feature icon={<Map size={20} aria-hidden />} title="Map veto" text="Valorant and CS2 matches can run turn-based veto sessions with polling-based public updates." />
         </section>

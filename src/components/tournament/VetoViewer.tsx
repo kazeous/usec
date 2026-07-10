@@ -10,12 +10,14 @@ type VetoPayload = {
     action: string;
     mapName: string;
     order: number;
-    actorTeamId?: string | null;
+    actorEntryId?: string | null;
   }>;
   nextStep?: {
     team: string;
     action: string;
   } | null;
+  teamA?: { id: string; name: string } | null;
+  teamB?: { id: string; name: string } | null;
 };
 
 export function VetoViewer({ matchId, initial }: { matchId: string; initial?: VetoPayload | null }) {
@@ -57,6 +59,7 @@ export function VetoViewer({ matchId, initial }: { matchId: string; initial?: Ve
   }
 
   const usedMaps = new Set(veto.actions.map((action) => action.mapName));
+  const nextActor = veto.nextStep?.team === "A" ? veto.teamA?.name ?? "Team A" : veto.nextStep?.team === "B" ? veto.teamB?.name ?? "Team B" : "System";
 
   return (
     <section className="panel grid gap-5 p-5">
@@ -64,7 +67,7 @@ export function VetoViewer({ matchId, initial }: { matchId: string; initial?: Ve
         <div>
           <h1 className="text-2xl font-black">Map veto</h1>
           <p className="text-sm muted">
-            {veto.nextStep ? `${veto.nextStep.team} to ${veto.nextStep.action}` : "Veto complete"}
+            {veto.nextStep ? `${nextActor} to ${veto.nextStep.action}` : "Veto complete"}
           </p>
         </div>
         <span className="inline-flex items-center gap-2 text-sm font-bold muted">

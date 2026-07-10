@@ -9,7 +9,7 @@ export type VetoStep = {
 };
 
 export type VetoAction = {
-  actorTeamId?: string | null;
+  actorEntryId?: string | null;
   action: VetoActionType;
   mapName: string;
   order: number;
@@ -17,8 +17,8 @@ export type VetoAction = {
 
 export type VetoState = {
   game: Game;
-  teamAId: string;
-  teamBId: string;
+  teamAEntryId: string;
+  teamBEntryId: string;
   mapPool: string[];
   actions: VetoAction[];
 };
@@ -55,7 +55,7 @@ export function isVetoComplete(state: VetoState) {
   return getNextVetoStep(state) === null;
 }
 
-export function applyVetoAction(state: VetoState, mapName: string, actorTeamId?: string | null): VetoState {
+export function applyVetoAction(state: VetoState, mapName: string, actorEntryId?: string | null): VetoState {
   const nextStep = getNextVetoStep(state);
   if (!nextStep) {
     throw new Error("Veto is already complete.");
@@ -67,9 +67,9 @@ export function applyVetoAction(state: VetoState, mapName: string, actorTeamId?:
   }
 
   const expectedTeamId =
-    nextStep.team === "A" ? state.teamAId : nextStep.team === "B" ? state.teamBId : null;
+    nextStep.team === "A" ? state.teamAEntryId : nextStep.team === "B" ? state.teamBEntryId : null;
 
-  if (nextStep.team !== "system" && actorTeamId !== expectedTeamId) {
+  if (nextStep.team !== "system" && actorEntryId !== expectedTeamId) {
     throw new Error("It is not this team's turn.");
   }
 
@@ -78,7 +78,7 @@ export function applyVetoAction(state: VetoState, mapName: string, actorTeamId?:
     actions: [
       ...state.actions,
       {
-        actorTeamId: expectedTeamId,
+        actorEntryId: expectedTeamId,
         action: nextStep.action,
         mapName,
         order: state.actions.length + 1

@@ -3,8 +3,8 @@ import { applyVetoAction, completeSystemDecider, getAvailableMaps, getNextVetoSt
 
 const state = {
   game: "valorant" as const,
-  teamAId: "team-a",
-  teamBId: "team-b",
+  teamAEntryId: "team-a",
+  teamBEntryId: "team-b",
   mapPool: ["Ascent", "Bind", "Haven", "Lotus", "Split", "Sunset", "Icebox"],
   actions: []
 };

@@ -1,52 +1,36 @@
 import { describe, expect, it } from "vitest";
 import { normalizeRegistrationPayload, validateTeamSize } from "@/lib/validation";
 
-const captain = {
-  game: "valorant",
-  mode: "team",
-  studentId: "S1000",
-  universityName: "Example University",
-  fullName: "Captain One",
-  email: "captain@example.edu",
-  discord: "captain"
-} as const;
-
-const teammate = (index: number) => ({
+const member = (index: number, isCaptain = false) => ({
   fullName: `Player ${index}`,
   studentId: `S100${index}`,
   universityName: "Example University",
   email: `player${index}@example.edu`,
-  discord: `player${index}`
+  discord: `player${index}`,
+  isCaptain
 });
 
 describe("registration validation", () => {
-  it("accepts a full five-player Valorant team", () => {
+  it("accepts a normalized five-player event roster", () => {
     const parsed = normalizeRegistrationPayload({
-      ...captain,
-      teamName: "Campus Five",
-      teammates: [teammate(1), teammate(2), teammate(3), teammate(4)]
+      tournamentId: "event-1", game: "valorant", mode: "team", teamName: "Campus Five",
+      members: [member(0, true), member(1), member(2), member(3), member(4)]
     });
-
-    expect(parsed.teamName).toBe("Campus Five");
+    expect(parsed.members).toHaveLength(5);
   });
 
-  it("rejects an incomplete team roster", () => {
-    expect(() =>
-      normalizeRegistrationPayload({
-        ...captain,
-        teamName: "Campus Four",
-        teammates: [teammate(1), teammate(2), teammate(3)]
-      })
-    ).toThrow();
+  it("rejects duplicate identities and multiple captains", () => {
+    expect(() => normalizeRegistrationPayload({
+      tournamentId: "event-1", game: "valorant", mode: "team", teamName: "Duplicates",
+      members: [member(0, true), member(0, true), member(2), member(3), member(4)]
+    })).toThrow();
+  });
+
+  it("accepts exactly one member for solo registration", () => {
+    expect(normalizeRegistrationPayload({ tournamentId: "event-1", game: "lol", mode: "solo", members: [member(1, true)] }).members).toHaveLength(1);
   });
 
   it("tracks required game team size", () => {
-    const result = validateTeamSize("cs2", [teammate(1), teammate(2), teammate(3), teammate(4)]);
-
-    expect(result).toEqual({
-      valid: true,
-      count: 5,
-      requiredTeamSize: 5
-    });
+    expect(validateTeamSize("cs2", [member(1), member(2), member(3), member(4)])).toEqual({ valid: true, count: 5, requiredTeamSize: 5 });
   });
 });

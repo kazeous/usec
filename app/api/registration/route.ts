@@ -1,63 +1,43 @@
 import { NextResponse } from "next/server";
-import { ZodError } from "zod";
 import { verifyTurnstileToken } from "@/lib/captcha";
 import { prisma } from "@/lib/db";
+import { apiErrorResponse, assertSameOrigin, ApiError } from "@/lib/http";
 import { normalizeRegistrationPayload } from "@/lib/validation";
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null);
-  const parsedResult = (() => {
-    try {
-      return { ok: true as const, value: normalizeRegistrationPayload(body) };
-    } catch (error) {
-      return { ok: false as const, error };
-    }
-  })();
-
-  if (!parsedResult.ok) {
-    const detail =
-      parsedResult.error instanceof ZodError
-        ? parsedResult.error.issues.map((issue) => issue.message).join(" ")
-        : "Registration form is incomplete or invalid.";
-
-    return NextResponse.json({ error: detail }, { status: 400 });
-  }
-
-  const parsed = parsedResult.value;
-  const captcha = await verifyTurnstileToken(parsed.captchaToken);
-
-  if (!captcha.ok) {
-    return NextResponse.json({ error: captcha.reason ?? "Captcha verification failed." }, { status: 400 });
-  }
-
   try {
-    const setting = await prisma.registrationSetting.findUnique({
+    assertSameOrigin(request);
+    const parsed = normalizeRegistrationPayload(await request.json().catch(() => null));
+    const captcha = await verifyTurnstileToken(parsed.captchaToken);
+    if (!captcha.ok) throw new ApiError(captcha.reason ?? "Captcha verification failed.");
+    const tournament = await prisma.tournament.findUnique({ where: { id: parsed.tournamentId } });
+    const now = new Date();
+    if (!tournament || tournament.status !== "registration" || !tournament.registrationOpen || (tournament.registrationClosesAt && tournament.registrationClosesAt <= now)) {
+      throw new ApiError("Registration is closed for this tournament.", 403, "registration_closed");
+    }
+    if (tournament.game !== parsed.game) throw new ApiError("Registration game does not match the tournament.");
+    const conflict = await prisma.registrationMember.findFirst({
       where: {
-        game: parsed.game
+        registration: { tournamentId: tournament.id, status: { not: "rejected" } },
+        OR: [
+          { studentId: { in: parsed.members.map((member) => member.studentId) } },
+          { email: { in: parsed.members.map((member) => member.email) } }
+        ]
       }
     });
-
-    if (!setting?.isOpen) {
-      return NextResponse.json({ error: "Registration is closed for this game." }, { status: 403 });
-    }
-
+    if (conflict) throw new ApiError("A player on this roster already has an active registration for this tournament.", 409, "duplicate_player");
     const registration = await prisma.registration.create({
       data: {
-        game: parsed.game,
+        tournamentId: tournament.id,
+        game: tournament.game,
         mode: parsed.mode,
-        studentId: parsed.studentId,
-        universityName: parsed.universityName,
-        fullName: parsed.fullName,
-        email: parsed.email.toLowerCase(),
-        discord: parsed.discord,
-        teamName: parsed.teamName,
-        teammates: parsed.teammates,
-        captchaProvider: captcha.provider
+        teamName: parsed.mode === "team" ? parsed.teamName : null,
+        captchaProvider: captcha.provider,
+        members: { create: parsed.members }
       }
     });
-
     return NextResponse.json({ id: registration.id, status: registration.status }, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: "Registration storage is not available." }, { status: 503 });
+  } catch (error) {
+    return apiErrorResponse(error);
   }
 }

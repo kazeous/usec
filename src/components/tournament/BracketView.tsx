@@ -3,9 +3,9 @@ import { Trophy } from "lucide-react";
 import { StatusPill } from "@/components/StatusPill";
 import type { PublicMatch } from "@/lib/types";
 
-export function BracketView({ matches }: { matches: PublicMatch[] }) {
+export function BracketView({ matches, staff = false }: { matches: PublicMatch[]; staff?: boolean }) {
   const groups = Object.entries(
-    matches.reduce<Record<string, PublicMatch[]>>((accumulator, match) => {
+    matches.filter((match) => staff || !match.isResetFinal || match.teamA || match.teamB).reduce<Record<string, PublicMatch[]>>((accumulator, match) => {
       const key = `${match.bracket.replaceAll("_", " ")} round ${match.round}`;
       accumulator[key] = [...(accumulator[key] ?? []), match];
       return accumulator;
@@ -31,9 +31,9 @@ export function BracketView({ matches }: { matches: PublicMatch[] }) {
           </h2>
           <div className="grid gap-3">
             {groupMatches.map((match) => (
-              <Link className="rounded-md border border-[#ded7ca] bg-[#fffdf8] p-3 transition hover:border-[#335cba]" href={`/matches/${match.id}`} key={match.id}>
+              <Link className="rounded-md border border-[#ded7ca] bg-[#fffdf8] p-3 transition hover:border-[#335cba]" href={staff ? `/staff/matches/${match.id}` : `/matches/${match.id}`} key={match.id}>
                 <div className="mb-3 flex items-center justify-between gap-3">
-                  <span className="text-sm font-black">Match {match.position}</span>
+                  <span className="text-sm font-black">{match.isResetFinal ? "Reset final" : `Match ${match.position}`}</span>
                   <StatusPill value={match.status} />
                 </div>
                 <TeamLine name={match.teamA?.name ?? "TBD"} score={match.teamAScore} winner={match.winner?.id === match.teamA?.id} />

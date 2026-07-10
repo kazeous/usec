@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { BracketView } from "@/components/tournament/BracketView";
+import { StandingsTable } from "@/components/tournament/StandingsTable";
 import { GameBadge } from "@/components/GameBadge";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusPill } from "@/components/StatusPill";
@@ -37,11 +38,12 @@ export default async function TournamentDetailPage({ params }: { params: Promise
             </div>
             <h1 className="text-4xl font-black">{tournament.title}</h1>
           </div>
-          <Link className="button button-secondary" href="/register">
-            Register
-          </Link>
+          {tournament.registrationOpen ? <Link className="button button-secondary" href={`/register?tournament=${tournament.id}`}>Register</Link> : null}
         </div>
-        <BracketView matches={tournament.matches} />
+        <div className="grid gap-6">
+          <StandingsTable standings={tournament.standings} swiss={tournament.format === "swiss"} />
+          <BracketView matches={tournament.matches} />
+        </div>
       </main>
     </>
   );

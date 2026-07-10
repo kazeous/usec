@@ -1,44 +1,44 @@
 export const games = ["valorant", "cs2", "lol"] as const;
 export type Game = (typeof games)[number];
 
-export const tournamentFormats = [
-  "single_elimination",
-  "double_elimination",
-  "round_robin",
-  "swiss"
-] as const;
+export const tournamentFormats = ["single_elimination", "double_elimination", "round_robin", "swiss"] as const;
 export type TournamentFormat = (typeof tournamentFormats)[number];
+export const tournamentStatuses = ["draft", "registration", "seeded", "live", "complete", "archived"] as const;
+export type TournamentStatus = (typeof tournamentStatuses)[number];
 
 export const registrationModes = ["solo", "team"] as const;
 export type RegistrationMode = (typeof registrationModes)[number];
-
 export type RegistrationStatus = "pending" | "approved" | "rejected";
 export type MatchStatus = "pending" | "scheduled" | "veto" | "live" | "complete" | "disputed";
 export type BracketSide = "winners" | "losers" | "finals" | "round_robin" | "swiss";
+export type MatchOutcome = "winner" | "loser";
+export type MatchSlot = "team_a" | "team_b";
 
-export type TeamSeed = {
-  id: string;
-  name: string;
-  seed?: number | null;
-};
+export type TeamSeed = { id: string; name: string; seed?: number | null };
 
 export type BracketMatchSeed = {
+  key: string;
   round: number;
   position: number;
   bracket: BracketSide;
-  teamAId?: string | null;
-  teamBId?: string | null;
+  teamAEntryId?: string | null;
+  teamBEntryId?: string | null;
   status: MatchStatus;
-  winnerId?: string | null;
-  winnerToRound?: number | null;
-  winnerToPosition?: number | null;
+  winnerEntryId?: string | null;
+  isBye?: boolean;
+  isResetFinal?: boolean;
 };
 
-export type PublicTeam = {
-  id: string;
-  name: string;
-  seed?: number | null;
+export type BracketFeedSeed = {
+  sourceKey: string;
+  outcome: MatchOutcome;
+  targetKey: string;
+  targetSlot: MatchSlot;
 };
+
+export type GeneratedCompetition = { matches: BracketMatchSeed[]; feeds: BracketFeedSeed[] };
+
+export type PublicEntry = { id: string; name: string; seed?: number | null };
 
 export type PublicMatch = {
   id: string;
@@ -47,11 +47,27 @@ export type PublicMatch = {
   bracket: BracketSide;
   status: MatchStatus;
   bestOf: number;
-  teamA?: PublicTeam | null;
-  teamB?: PublicTeam | null;
-  winner?: PublicTeam | null;
+  teamA?: PublicEntry | null;
+  teamB?: PublicEntry | null;
+  winner?: PublicEntry | null;
   teamAScore: number;
   teamBScore: number;
+  isBye?: boolean;
+  isResetFinal?: boolean;
+};
+
+export type StandingRow = {
+  entryId: string;
+  name: string;
+  seed: number | null;
+  played: number;
+  wins: number;
+  losses: number;
+  gamesWon: number;
+  gamesLost: number;
+  gameDifferential: number;
+  buchholz?: number;
+  rank: number;
 };
 
 export type PublicTournament = {
@@ -59,16 +75,25 @@ export type PublicTournament = {
   title: string;
   game: Game;
   format: TournamentFormat;
-  status: string;
+  status: TournamentStatus;
   registrationOpen: boolean;
+  registrationMessage?: string | null;
+  registrationClosesAt?: string | null;
+  startsAt?: string | null;
+  swissRounds?: number | null;
+  currentRound: number;
   matches: PublicMatch[];
-  teams: PublicTeam[];
+  entries: PublicEntry[];
+  standings: StandingRow[];
 };
 
-export type TeammateInput = {
+export type RegistrationMemberInput = {
   fullName: string;
   studentId: string;
   universityName: string;
   email: string;
   discord?: string;
+  isCaptain?: boolean;
 };
+
+export type TeammateInput = Omit<RegistrationMemberInput, "isCaptain">;

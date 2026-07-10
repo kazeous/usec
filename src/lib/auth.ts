@@ -72,10 +72,17 @@ export async function getCurrentStaff() {
   });
 
   if (!session || session.expiresAt < new Date()) {
+    if (session) {
+      await prisma.session.delete({ where: { id: session.id } }).catch(() => null);
+    }
     return null;
   }
 
   return session.user;
+}
+
+export async function getCurrentStaffForApi() {
+  return getCurrentStaff();
 }
 
 export async function requireStaff() {

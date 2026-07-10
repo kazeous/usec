@@ -1,96 +1,40 @@
-# USEC Product Spec
+# USEC Product Specification
 
-## Roles
+## Roles and event lifecycle
 
-- **Public player:** Registers as a solo player or team captain and views brackets, match pages, and veto progress.
-- **Staff:** Opens/closes registration, reviews submissions, creates tournaments, generates brackets, starts veto sessions, and records scores.
-- **Admin:** Same as staff in v1. Future releases can add staff account management and audit controls.
+- Public players register a complete team or join a tournament-specific solo pool.
+- Staff reviews submissions, maintains reusable teams, builds teams from five approved solos, enrolls and seeds entrants, generates competitions, runs veto sessions, and records results.
+- Tournaments follow `draft → registration → seeded → live → complete → archived`. Draft events are private; roster and seed changes stop when the bracket is generated.
 
-## Supported Games
+## Registration and teams
 
-- **Valorant:** Five-player teams, map veto enabled, default best-of-three.
-- **CS2:** Five-player teams, map veto enabled, default best-of-three.
-- **LoL:** Five-player teams, score/bracket tracking only in v1. Champion draft is reserved for a future release.
+- Every registration belongs to one open tournament and contains normalized roster members.
+- Valorant, CS2, and LoL rosters contain five unique students. A student ID or email cannot appear twice in an event.
+- Team approval creates or links a reusable team and snapshots its roster into the tournament entry.
+- Approved solos remain unresolved until staff selects exactly five to create and enroll a team.
+- A reusable team may enter multiple tournaments, while each event retains its historical name, seed, and roster snapshot.
 
-Map pools are configurable in code for v1 and should be promoted to staff-editable settings later because live map pools change over time.
+## Competition formats
 
-## Registration
+- Single elimination supports arbitrary field sizes and automatically advances byes.
+- Double elimination persists winner and loser routes and uses a reset final when the lower-bracket finalist wins the first grand final.
+- Round robin schedules every pairing once and ranks by wins, game differential, games won, two-team head-to-head, then seed.
+- Swiss generates one round at a time, avoids rematches when possible, rotates byes, and ranks by wins, Buchholz, game differential, then seed. Staff configures 3–7 rounds.
 
-The public registration form captures:
+## Matches and veto
 
-- Game.
-- Register as solo player or team.
-- Student ID.
-- University name.
-- Full name.
-- Email.
-- Discord/contact handle.
-- Team name for team registration.
-- Teammate full name, student ID, university name, email, and contact handle.
-- Cloudflare Turnstile captcha token.
+- Scores represent terminal series wins: Valorant and CS2 use BO3; LoL uses BO1.
+- Correcting a result is allowed until a downstream match starts. Staff can explicitly roll back a result and its downstream assignments when necessary.
+- Valorant and CS2 use the BO3 sequence: A ban, B ban, A pick, B pick, A ban, B ban, remaining-map decider.
+- Veto state snapshots the map pool, enforces turn order transactionally, and returns the match to scheduled state when complete.
 
-Rules:
+## Security and operations
 
-- Staff can open or close registration by game.
-- Closed games reject public submissions.
-- Team registration must include exactly five total players for Valorant, CS2, and LoL.
-- Solo registration cannot include teammates.
-- All registrations start as `pending`.
-- Staff can approve or reject submissions.
+- Staff uses database-backed, expiring, HTTP-only sessions. API authorization returns structured JSON errors instead of redirects.
+- Mutations enforce same-origin requests; staff login is throttled after repeated failures.
+- Cloudflare Turnstile is required in production. Local development uses an explicit placeholder token when keys are absent.
+- Database failures are surfaced; public reads never substitute fabricated sample data.
 
-## Tournament Formats
+## Deferred features
 
-- **Single elimination:** Generates seeded winners bracket and final.
-- **Double elimination:** Generates winners bracket, losers bracket placeholders, and finals match.
-- **Round robin:** Generates each unique team pairing once.
-- **Swiss:** Generates current-round pairings by points while avoiding rematches when possible.
-
-Bracket generation uses approved teams for the selected game. Staff can regenerate before the event is locked.
-
-## Match Flow
-
-- Public match pages show teams, score, winner, status, and veto link.
-- Staff match pages allow score entry.
-- A non-tied score marks the match complete and advances the winner into the next bracket slot where available.
-- More complete advancement rules for double elimination, Swiss standings, and round robin tables should be added before large events.
-
-## Map Veto
-
-- Veto is available for Valorant and CS2.
-- Staff starts a veto session from a match page.
-- V1 uses a best-of-three sequence:
-  - Team A ban.
-  - Team B ban.
-  - Team A pick.
-  - Team B pick.
-  - Team A ban.
-  - Team B ban.
-  - Remaining map becomes decider.
-- Public veto page polls the API for updates.
-- LoL does not use map veto.
-
-## Cloudflare Turnstile
-
-- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` stores the public site key and is safe to expose to the browser.
-- `TURNSTILE_SECRET_KEY` stores the server-only secret key and must never be exposed publicly.
-- Production registration rejects submissions when `TURNSTILE_SECRET_KEY` is missing.
-- Local development falls back to a placeholder when Turnstile keys are not configured.
-
-## Future Features
-
-- LoL champion draft:
-  - Use the existing `ChampionDraft` model.
-  - Add side selection, pick/ban turn order, champion catalog import, and public draft viewer.
-- University SSO:
-  - Replace app-local login after identity provider details are known.
-- Captcha operations:
-  - Add staff-visible captcha health checks and spam-rate monitoring.
-- Staff permissions:
-  - Add granular roles, audit logs, and account management.
-- Tournament polish:
-  - Seeding editor.
-  - Bracket lock.
-  - CSV export.
-  - Full double-elimination advancement.
-  - Swiss standings and tiebreakers.
-  - Round robin table view.
+- LoL champion draft, university SSO, granular staff permissions, audit logs, outbound email/Discord notifications, and staff-editable map pools.

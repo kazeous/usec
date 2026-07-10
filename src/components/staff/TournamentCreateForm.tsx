@@ -21,11 +21,16 @@ export function TournamentCreateForm() {
         title: formData.get("title"),
         game: formData.get("game"),
         format: formData.get("format"),
-        registrationOpen: formData.get("registrationOpen") === "on"
+        registrationOpen: formData.get("registrationOpen") === "on",
+        registrationMessage: formData.get("registrationMessage"),
+        startsAt: formData.get("startsAt") ? new Date(String(formData.get("startsAt"))).toISOString() : null,
+        registrationClosesAt: formData.get("registrationClosesAt") ? new Date(String(formData.get("registrationClosesAt"))).toISOString() : null,
+        swissRounds: formData.get("format") === "swiss" ? Number(formData.get("swissRounds") || 3) : null
       })
     });
 
-    setMessage(response.ok ? "Tournament created." : "Could not create tournament.");
+    const result = await response.json().catch(() => ({}));
+    setMessage(response.ok ? "Tournament created." : result.error ?? "Could not create tournament.");
     if (response.ok) {
       event.currentTarget.reset();
     }
@@ -35,6 +40,11 @@ export function TournamentCreateForm() {
     <form className="panel grid gap-4 p-5" onSubmit={handleSubmit}>
       <h2 className="text-xl font-black">Create tournament</h2>
       <input className="field" name="title" placeholder="Spring CS2 Cup" required />
+      <input className="field" name="registrationMessage" placeholder="Registration message" />
+      <div className="grid gap-3 md:grid-cols-2">
+        <label className="grid gap-2 text-sm font-bold">Starts at<input className="field" name="startsAt" type="datetime-local" /></label>
+        <label className="grid gap-2 text-sm font-bold">Registration closes<input className="field" name="registrationClosesAt" type="datetime-local" /></label>
+      </div>
       <div className="grid gap-3 md:grid-cols-2">
         <select className="field" name="game" defaultValue="valorant">
           {Object.entries(gameConfigs).map(([key, config]) => (
@@ -51,6 +61,7 @@ export function TournamentCreateForm() {
           ))}
         </select>
       </div>
+      <label className="grid gap-2 text-sm font-bold">Swiss rounds<input className="field" min={3} max={7} name="swissRounds" type="number" defaultValue={3} /></label>
       <label className="flex items-center gap-2 text-sm font-bold">
         <input name="registrationOpen" type="checkbox" />
         Open tournament registration

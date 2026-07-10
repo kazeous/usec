@@ -5,14 +5,14 @@ import { StaffNav } from "@/components/staff/StaffNav";
 import { TournamentCreateForm } from "@/components/staff/TournamentCreateForm";
 import { StatusPill } from "@/components/StatusPill";
 import { requireStaff } from "@/lib/auth";
-import { getPublicTournaments } from "@/lib/data";
+import { getStaffTournaments } from "@/lib/data";
 import { formatTournamentFormat } from "@/lib/game-config";
 
 export const dynamic = "force-dynamic";
 
 export default async function StaffTournamentsPage() {
   const staff = await requireStaff();
-  const tournaments = await getPublicTournaments();
+  const tournaments = await getStaffTournaments();
 
   return (
     <>

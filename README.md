@@ -1,41 +1,43 @@
 # USEC
 
-University esports club tournament platform for registrations, brackets, match scores, and map veto sessions.
+University esports tournament platform with event registration, reusable team rosters, staff-built solo teams, seeded brackets, standings, match scoring, and map veto.
 
 ## Stack
 
-- Next.js App Router
-- TypeScript
-- PostgreSQL + Prisma
-- Tailwind CSS
+- Next.js App Router, React, TypeScript, and Tailwind CSS
+- PostgreSQL and Prisma
 - Vitest
 
-## Local Setup
+## Local setup
 
-1. Install dependencies:
+1. Copy `.env.example` to `.env`.
+2. Start PostgreSQL locally or run `docker-compose up -d`.
+3. Install and initialize the app:
 
    ```bash
    npm install
-   ```
-
-2. Copy `.env.example` to `.env` and set `DATABASE_URL`.
-
-3. Generate Prisma client and migrate the database:
-
-   ```bash
    npm run db:push
    npm run db:seed
-   ```
-
-4. Start the dev server:
-
-   ```bash
+   npm run db:demo
    npm run dev
    ```
 
-Default seeded staff login:
+The seed creates `admin@usec.local` with password `ChangeMe123!`. Change it before deployment.
 
-- Email: `admin@usec.local`
-- Password: `ChangeMe123!`
+## Core workflow
 
-Change this before deploying.
+1. Staff creates a tournament and moves it from draft to registration.
+2. Players submit a team or solo registration for that tournament.
+3. Staff approves team rosters, links reusable teams, or combines five approved solos.
+4. Staff enrolls and seeds confirmed entries, then generates single elimination, double elimination, round robin, or the first Swiss round.
+5. Staff records terminal series results. Elimination outcomes follow persisted winner/loser routes; round-robin and Swiss results update standings.
+6. Swiss events generate each later round only after the previous round completes. Valorant and CS2 matches can run the BO3 map veto flow.
+
+## Verification
+
+```bash
+npm test
+npm run typecheck
+npm run lint
+npm run build
+```

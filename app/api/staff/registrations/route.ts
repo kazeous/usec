@@ -1,79 +1,32 @@
-import type { Registration } from "@prisma/client";
 import { NextResponse } from "next/server";
-import { requireStaff } from "@/lib/auth";
+import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { type TeammateInput } from "@/lib/types";
+import { apiErrorResponse, requireStaffApi } from "@/lib/http";
+import { reviewRegistration } from "@/lib/registrations/service";
 
-export async function GET() {
-  await requireStaff();
-  const registrations = await prisma.registration.findMany({
-    orderBy: { createdAt: "desc" }
-  });
+const reviewSchema = z.object({
+  registrationId: z.string().min(1),
+  action: z.enum(["reject", "approve_new", "approve_link"]),
+  teamId: z.string().optional(),
+  reviewNote: z.string().max(500).optional()
+});
 
-  return NextResponse.json(registrations);
+export async function GET(request: Request) {
+  try {
+    await requireStaffApi(request);
+    const url = new URL(request.url);
+    const tournamentId = url.searchParams.get("tournamentId");
+    return NextResponse.json(await prisma.registration.findMany({
+      where: tournamentId ? { tournamentId } : undefined,
+      include: { members: { orderBy: { isCaptain: "desc" } }, tournament: true, resolvedTeam: true },
+      orderBy: { createdAt: "desc" }
+    }));
+  } catch (error) { return apiErrorResponse(error); }
 }
 
 export async function PATCH(request: Request) {
-  await requireStaff();
-  const body = await request.json().catch(() => null);
-  const id = String(body?.id ?? "");
-  const status = body?.status;
-
-  if (!id || !["approved", "rejected"].includes(status)) {
-    return NextResponse.json({ error: "Registration ID and valid status are required." }, { status: 400 });
-  }
-
-  const registration = await prisma.registration.update({
-    where: { id },
-    data: { status }
-  });
-
-  if (status === "approved") {
-    await createTeamFromRegistration(registration);
-  }
-
-  return NextResponse.json(registration);
-}
-
-async function createTeamFromRegistration(registration: Registration) {
-  const existing = await prisma.team.findUnique({
-    where: {
-      registrationId: registration.id
-    }
-  });
-
-  if (existing) {
-    return existing;
-  }
-
-  const teammates = (Array.isArray(registration.teammates) ? registration.teammates : []) as TeammateInput[];
-  const teamName = registration.mode === "team" ? registration.teamName : registration.fullName;
-
-  return prisma.team.create({
-    data: {
-      registrationId: registration.id,
-      game: registration.game,
-      name: teamName ?? registration.fullName,
-      players: {
-        create: [
-          {
-            fullName: registration.fullName,
-            studentId: registration.studentId,
-            universityName: registration.universityName,
-            email: registration.email,
-            discord: registration.discord,
-            isCaptain: true
-          },
-          ...teammates.map((teammate) => ({
-            fullName: teammate.fullName,
-            studentId: teammate.studentId,
-            universityName: teammate.universityName,
-            email: teammate.email,
-            discord: teammate.discord,
-            isCaptain: false
-          }))
-        ]
-      }
-    }
-  });
+  try {
+    await requireStaffApi(request);
+    return NextResponse.json(await reviewRegistration(reviewSchema.parse(await request.json())));
+  } catch (error) { return apiErrorResponse(error); }
 }

@@ -2,12 +2,12 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { RegistrationForm } from "@/components/forms/RegistrationForm";
-import { getRegistrationSettings } from "@/lib/data";
+import { getOpenRegistrationTournaments } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
-export default async function RegisterPage() {
-  const settings = await getRegistrationSettings();
+export default async function RegisterPage({ searchParams }: { searchParams: Promise<{ tournament?: string }> }) {
+  const [tournaments, query] = await Promise.all([getOpenRegistrationTournaments(), searchParams]);
 
   return (
     <>
@@ -20,10 +20,10 @@ export default async function RegisterPage() {
         <div className="mb-6">
           <h1 className="text-4xl font-black">Player and team registration</h1>
           <p className="mt-2 max-w-2xl muted">
-            Submit your student details and roster for staff review. Staff can close this form by game at any time.
+            Submit your student details and roster for staff review. Each tournament controls its own registration window.
           </p>
         </div>
-        <RegistrationForm settings={settings} />
+        <RegistrationForm tournaments={tournaments} initialTournamentId={query.tournament} />
       </main>
     </>
   );

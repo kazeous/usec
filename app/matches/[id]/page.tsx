@@ -4,6 +4,7 @@ import { ArrowLeft, Map } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StatusPill } from "@/components/StatusPill";
 import { getPublicMatch } from "@/lib/data";
+import { getGameConfig } from "@/lib/game-config";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
   if (!match) {
     notFound();
   }
+  const hasVeto = getGameConfig(match.tournament.game).hasMapVeto;
 
   return (
     <>
@@ -34,10 +36,10 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
           <ScoreLine name={match.teamA?.name ?? "TBD"} score={match.teamAScore ?? 0} winner={match.winner?.id === match.teamA?.id} />
           <ScoreLine name={match.teamB?.name ?? "TBD"} score={match.teamBScore ?? 0} winner={match.winner?.id === match.teamB?.id} />
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link className="button button-primary" href={`/matches/${match.id}/veto`}>
+            {hasVeto ? <Link className="button button-primary" href={`/matches/${match.id}/veto`}>
               <Map size={16} aria-hidden />
               Map veto
-            </Link>
+            </Link> : null}
             <Link className="button button-secondary" href={`/staff/matches/${match.id}`}>
               Staff manage
             </Link>

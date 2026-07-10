@@ -33,7 +33,7 @@ export default async function TournamentsPage() {
                 </span>
               </div>
               <div className="mt-5 flex items-center justify-between gap-3 text-sm font-bold">
-                <span>{tournament.teams.length} teams</span>
+                <span>{tournament.entries.length} teams</span>
                 <span className="inline-flex items-center gap-2">
                   Open
                   <ArrowRight size={16} aria-hidden />
