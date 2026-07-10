@@ -30,7 +30,7 @@ export function SiteFooter() {
           </span>
           <div>
             <p className="font-black">VNU-HCMUS Esports Club</p>
-            <p className="mt-1 text-sm text-white/60">Since 2014. this site wasn't made with love.</p>
+            <p className="mt-1 text-sm text-white/60">Since 2014. this site wasn&apos;t made with love.</p>
           </div>
         </div>
         <nav aria-label="Social and contact links" className="flex flex-wrap gap-3">
