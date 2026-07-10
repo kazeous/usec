@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Brackets, ClipboardList, Map } from "lucide-react";
+import { ArrowRight, Brackets, ChevronDown, ClipboardList } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { GameBadge } from "@/components/GameBadge";
 import { StatusPill } from "@/components/StatusPill";
@@ -17,7 +17,7 @@ export default async function HomePage() {
       <SiteHeader />
       <main>
         <section className="relative overflow-hidden border-b border-[#ded7ca]">
-          <div className="absolute inset-0 bg-[url('/images/arena-hero.png')] bg-cover bg-center opacity-20" />
+          <div className="absolute inset-0 bg-[url('/images/esports-world-cup.jpg')] bg-cover bg-center opacity-20" />
           <div className="relative mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1.1fr_0.9fr] lg:px-8">
             <div className="flex min-h-[28rem] flex-col justify-center">
               <p className="mb-3 text-sm font-black uppercase text-cobalt">University Esports Club</p>
@@ -68,10 +68,30 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="mx-auto grid max-w-7xl gap-4 px-4 py-8 sm:px-6 md:grid-cols-3 lg:px-8">
-          <Feature icon={<ClipboardList size={20} aria-hidden />} title="Event registration" text="Tournament-specific team and solo registration includes normalized student rosters and Turnstile protection." />
-          <Feature icon={<Brackets size={20} aria-hidden />} title="Auto brackets" text="Single elimination, double elimination, round robin, and Swiss generators are wired into staff workflows." />
-          <Feature icon={<Map size={20} aria-hidden />} title="Map veto" text="Valorant and CS2 matches can run turn-based veto sessions with polling-based public updates." />
+        <section id="faq" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="mb-7 max-w-2xl">
+            <p className="mb-2 text-sm font-black uppercase text-cobalt">Registration guide</p>
+            <h2 className="text-3xl font-black sm:text-4xl">Frequently asked questions</h2>
+            <p className="mt-3 muted">Everything you need to submit your tournament registration successfully.</p>
+          </div>
+          <div className="grid items-start gap-4 md:grid-cols-2">
+            <FaqItem
+              question="How do I register for a tournament?"
+              answer="Select Register, choose an open tournament, and complete the form. You can also open a tournament first and use its Register button to preselect that event."
+            />
+            <FaqItem
+              question="Can I register by myself or with a team?"
+              answer="Yes. Choose Team registration to submit a complete roster, or Solo player to enter the solo pool. Staff can group approved solo players into a team for the event."
+            />
+            <FaqItem
+              question="What information should I prepare?"
+              answer="Have each player's full name, in-game name, student ID, university, and contact handle ready. Team captains also need an email address and a team name."
+            />
+            <FaqItem
+              question="What happens after I submit?"
+              answer="Your registration is sent to USEC staff for review. Keep an eye on the contact details you provided in case the team needs to confirm or correct any information."
+            />
+          </div>
         </section>
       </main>
     </>
@@ -87,12 +107,14 @@ function Metric({ value, label }: { value: number | string; label: string }) {
   );
 }
 
-function Feature({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
+function FaqItem({ question, answer }: { question: string; answer: string }) {
   return (
-    <article className="panel p-5">
-      <div className="mb-4 grid size-10 place-items-center rounded-md bg-[#151515] text-white">{icon}</div>
-      <h2 className="text-lg font-black">{title}</h2>
-      <p className="mt-2 text-sm muted">{text}</p>
-    </article>
+    <details className="group panel p-5 open:border-[#335cba]">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-black marker:content-none">
+        {question}
+        <ChevronDown className="shrink-0 transition-transform group-open:rotate-180" size={20} aria-hidden />
+      </summary>
+      <p className="mt-4 border-t border-[#ded7ca] pt-4 text-sm leading-6 muted">{answer}</p>
+    </details>
   );
 }
