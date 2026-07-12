@@ -120,6 +120,7 @@ function toPublicTournament(tournament: TournamentWithRelations): PublicTourname
     status: tournament.status,
     registrationOpen: tournament.registrationOpen && (!tournament.registrationClosesAt || tournament.registrationClosesAt > new Date()),
     registrationMessage: tournament.registrationMessage,
+    venue: tournament.venue ?? null,
     registrationClosesAt: tournament.registrationClosesAt?.toISOString() ?? null,
     startsAt: tournament.startsAt?.toISOString() ?? null,
     swissRounds: tournament.swissRounds,

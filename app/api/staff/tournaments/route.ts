@@ -10,6 +10,7 @@ const createSchema = z.object({
   format: z.enum(tournamentFormats),
   registrationOpen: z.boolean().default(false),
   registrationMessage: z.string().trim().max(500).optional(),
+  venue: z.string().trim().max(200).optional().nullable(),
   startsAt: z.string().datetime().optional().nullable(),
   registrationClosesAt: z.string().datetime().optional().nullable(),
   swissRounds: z.number().int().min(3).max(7).optional().nullable(),

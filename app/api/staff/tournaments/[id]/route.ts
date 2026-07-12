@@ -10,6 +10,7 @@ const updateSchema = z.object({
   status: z.enum(tournamentStatuses).optional(),
   registrationOpen: z.boolean().optional(),
   registrationMessage: z.string().trim().max(500).nullable().optional(),
+  venue: z.string().trim().max(200).nullable().optional(),
   registrationClosesAt: z.string().datetime().nullable().optional(),
   startsAt: z.string().datetime().nullable().optional(),
   swissRounds: z.number().int().min(3).max(7).nullable().optional(),

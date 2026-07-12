@@ -183,6 +183,7 @@ model Tournament {
   status               TournamentStatus  @default(draft)
   registrationOpen     Boolean           @default(false)
   registrationMessage  String?
+  venue                String?
   registrationClosesAt DateTime?
   startsAt             DateTime?
   lockBracketAt        DateTime?

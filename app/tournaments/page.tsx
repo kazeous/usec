@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Clock, CalendarX, MapPin } from "lucide-react";
 import { GameBadge } from "@/components/GameBadge";
 import { SiteHeader } from "@/components/SiteHeader";
 import { TournamentStatusPill } from "@/components/TournamentStatusPill";
@@ -32,6 +32,28 @@ export default async function TournamentsPage() {
                   {formatTournamentFormat(tournament.format)}
                 </span>
               </div>
+              {(tournament.startsAt || tournament.registrationClosesAt || tournament.venue) ? (
+                <div className="mt-3 grid gap-1.5 text-xs">
+                  {tournament.startsAt ? (
+                    <span className="inline-flex items-center gap-1.5 muted">
+                      <Clock size={13} aria-hidden className="shrink-0" />
+                      <span><span className="font-bold">Starts:</span> {new Date(tournament.startsAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                    </span>
+                  ) : null}
+                  {tournament.registrationClosesAt ? (
+                    <span className="inline-flex items-center gap-1.5 muted">
+                      <CalendarX size={13} aria-hidden className="shrink-0" />
+                      <span><span className="font-bold">Reg. closes:</span> {new Date(tournament.registrationClosesAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                    </span>
+                  ) : null}
+                  {tournament.venue ? (
+                    <span className="inline-flex items-center gap-1.5 muted">
+                      <MapPin size={13} aria-hidden className="shrink-0" />
+                      <span><span className="font-bold">Venue:</span> {tournament.venue}</span>
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
               <div className="mt-5 flex items-center justify-between gap-3 text-sm font-bold">
                 <span>{tournament.entries.length} teams</span>
                 <span className="inline-flex items-center gap-2">

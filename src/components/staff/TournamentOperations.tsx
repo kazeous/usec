@@ -9,7 +9,7 @@ type Team = { id: string; name: string; game: Game };
 type Solo = { id: string; name: string };
 
 export function TournamentOperations({ tournament, entries, teams, solos }: {
-  tournament: { id: string; title: string; game: Game; format: TournamentFormat; status: TournamentStatus; registrationOpen: boolean; registrationMessage?: string | null; registrationClosesAt?: string | null; startsAt?: string | null; swissRounds?: number | null; currentRound: number };
+  tournament: { id: string; title: string; game: Game; format: TournamentFormat; status: TournamentStatus; registrationOpen: boolean; registrationMessage?: string | null; venue?: string | null; registrationClosesAt?: string | null; startsAt?: string | null; swissRounds?: number | null; currentRound: number };
   entries: Entry[];
   teams: Team[];
   solos: Solo[];
@@ -35,8 +35,9 @@ export function TournamentOperations({ tournament, entries, teams, solos }: {
     <div className="grid gap-4">
       <section className="panel grid gap-4 p-5">
         <div><h2 className="text-xl font-black">Event lifecycle and registration</h2><p className="text-sm muted">Draft events are private. Opening registration publishes the event; bracket generation locks rosters.</p></div>
-        <form className="grid gap-3 md:grid-cols-2" onSubmit={(event) => { event.preventDefault(); const form = new FormData(event.currentTarget); const closeValue = String(form.get("registrationClosesAt") ?? ""); const startValue = String(form.get("startsAt") ?? ""); void mutate(`/api/staff/tournaments/${tournament.id}`, "PATCH", { registrationMessage: form.get("registrationMessage"), registrationOpen: form.get("registrationOpen") === "on", registrationClosesAt: closeValue ? new Date(closeValue).toISOString() : null, startsAt: startValue ? new Date(startValue).toISOString() : null, swissRounds: tournament.format === "swiss" ? Number(form.get("swissRounds") || 3) : null }); }}>
+        <form className="grid gap-3 md:grid-cols-2" onSubmit={(event) => { event.preventDefault(); const form = new FormData(event.currentTarget); const closeValue = String(form.get("registrationClosesAt") ?? ""); const startValue = String(form.get("startsAt") ?? ""); void mutate(`/api/staff/tournaments/${tournament.id}`, "PATCH", { registrationMessage: form.get("registrationMessage"), venue: form.get("venue") || null, registrationOpen: form.get("registrationOpen") === "on", registrationClosesAt: closeValue ? new Date(closeValue).toISOString() : null, startsAt: startValue ? new Date(startValue).toISOString() : null, swissRounds: tournament.format === "swiss" ? Number(form.get("swissRounds") || 3) : null }); }}>
           <input className="field md:col-span-2" name="registrationMessage" defaultValue={tournament.registrationMessage ?? ""} placeholder="Registration message" disabled={!editable} />
+          <input className="field md:col-span-2" name="venue" defaultValue={tournament.venue ?? ""} placeholder="Venue (e.g. Room B4, Online)" disabled={!editable} />
           <label className="grid gap-2 text-sm font-bold">Starts at<input className="field" name="startsAt" type="datetime-local" defaultValue={tournament.startsAt?.slice(0, 16) ?? ""} disabled={!editable} /></label>
           <label className="grid gap-2 text-sm font-bold">Registration closes<input className="field" name="registrationClosesAt" type="datetime-local" defaultValue={tournament.registrationClosesAt?.slice(0, 16) ?? ""} disabled={!editable} /></label>
           {tournament.format === "swiss" ? <label className="grid gap-2 text-sm font-bold">Swiss rounds<input className="field" name="swissRounds" type="number" min={3} max={7} defaultValue={tournament.swissRounds ?? 3} disabled={!editable} /></label> : <span />}

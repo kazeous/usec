@@ -113,6 +113,7 @@ export type PublicTournament = {
   status: TournamentStatus;
   registrationOpen: boolean;
   registrationMessage?: string | null;
+  venue?: string | null;
   registrationClosesAt?: string | null;
   startsAt?: string | null;
   swissRounds?: number | null;

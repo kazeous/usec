@@ -27,6 +27,7 @@ export function TournamentCreateForm() {
         format,
         registrationOpen: formData.get("registrationOpen") === "on",
         registrationMessage: formData.get("registrationMessage"),
+        venue: formData.get("venue") || null,
         startsAt: formData.get("startsAt") ? new Date(String(formData.get("startsAt"))).toISOString() : null,
         registrationClosesAt: formData.get("registrationClosesAt") ? new Date(String(formData.get("registrationClosesAt"))).toISOString() : null,
         swissRounds: format === "swiss" ? Number(formData.get("swissRounds") || 3) : null,
@@ -49,6 +50,7 @@ export function TournamentCreateForm() {
       <h2 className="text-xl font-black">Create tournament</h2>
       <input className="field" name="title" placeholder="Spring CS2 Cup" required />
       <input className="field" name="registrationMessage" placeholder="Registration message" />
+      <input className="field" name="venue" placeholder="Venue (e.g. Room B4, Online)" />
       <div className="grid gap-3 md:grid-cols-2">
         <label className="grid gap-2 text-sm font-bold">Starts at<input className="field" name="startsAt" type="datetime-local" /></label>
         <label className="grid gap-2 text-sm font-bold">Registration closes<input className="field" name="registrationClosesAt" type="datetime-local" /></label>
