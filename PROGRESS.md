@@ -18,6 +18,7 @@ Teamfight Tactics staged-lobby tournament support is implemented. Database migra
 
 ## Completed in this phase
 
+- Replaced the global Arial stack with self-hosted IBM Plex Sans for body/UI text and Manrope for semantic headings, including Vietnamese font subsets.
 - Added TFT as a solo-only game and constrained it to the dedicated TFT lobby format.
 - Added 8/16/32/64-player staged competitions, eight-player snake-seeded lobbies, four-game top-four cuts, and point resets between stages.
 - Added `8/7/6/5/4/3/2/1` placement scoring with deterministic TFT tie-breaks.

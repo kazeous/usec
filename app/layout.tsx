@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { SiteFooter } from "@/components/SiteFooter";
+import "@fontsource-variable/ibm-plex-sans/wght.css";
+import "@fontsource-variable/ibm-plex-sans/wght-italic.css";
+import "@fontsource-variable/manrope/wght.css";
 import "./globals.css";
 
 export const metadata: Metadata = {

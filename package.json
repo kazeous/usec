@@ -19,6 +19,8 @@
     "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@fontsource-variable/ibm-plex-sans": "^5.2.8",
+    "@fontsource-variable/manrope": "^5.2.8",
     "@prisma/client": "^6.0.0",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
