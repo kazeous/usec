@@ -23,3 +23,8 @@ prisma/dev.db
 # OS/editor
 .DS_Store
 .idea/
+
+#Codex
+docs/
+AGENTS.md
+PROGRESS.md
