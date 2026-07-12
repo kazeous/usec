@@ -52,13 +52,7 @@ export default async function HomePage() {
                   <Metric value={openCount} label="Open reg" />
                   <Metric value={tournaments.length} label="Total events" />
                 </div>
-                {openCount > 0 ? (
-                  <Link className="button button-primary" href="/register">
-                    <ClipboardList size={16} aria-hidden />
-                    Register now
-                    <ArrowRight size={16} aria-hidden />
-                  </Link>
-                ) : (
+                {openCount === 0 && (
                   <p className="text-center text-sm muted">No tournaments are accepting registrations right now.</p>
                 )}
                 <Link className="button button-secondary" href="/tournaments">
