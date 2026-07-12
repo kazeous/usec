@@ -40,6 +40,9 @@ export const registrationSchema = z
     captchaToken: z.string().trim().optional()
   })
   .superRefine((value, context) => {
+    if (value.game === "tft" && value.mode !== "solo") {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["mode"], message: "Teamfight Tactics registration is solo only." });
+    }
     const requiredTeamSize = gameConfigs[value.game].teamSize;
     const maxTeamSize = requiredTeamSize + gameConfigs[value.game].maxReservePlayers;
     const invalidRosterSize = value.mode === "team"

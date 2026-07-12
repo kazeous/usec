@@ -1,14 +1,28 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { calculateStandings } from "@/lib/tournaments/brackets";
+import { rankTftEntries } from "@/lib/tournaments/tft";
 import type { VetoActionType } from "@/lib/tournaments/veto";
-import type { Game, PublicEntry, PublicMatch, PublicTournament, TeamSeed } from "@/lib/types";
+import type { Game, PublicEntry, PublicMatch, PublicTftStage, PublicTournament, TeamSeed } from "@/lib/types";
 
 const tournamentInclude = {
   entries: { where: { status: "confirmed" as const }, orderBy: [{ seed: "asc" as const }, { displayName: "asc" as const }] },
   matches: {
     include: { teamA: true, teamB: true, winner: true },
     orderBy: [{ bracket: "asc" as const }, { round: "asc" as const }, { position: "asc" as const }]
+  },
+  tftStages: {
+    orderBy: { sequence: "asc" as const },
+    include: {
+      winner: true,
+      lobbies: {
+        orderBy: { number: "asc" as const },
+        include: {
+          entries: { orderBy: { stageSeed: "asc" as const }, include: { entry: true } },
+          games: { orderBy: { number: "asc" as const }, include: { results: true } }
+        }
+      }
+    }
   }
 };
 
@@ -52,6 +66,46 @@ function toPublicMatch(match: TournamentWithRelations["matches"][number]): Publi
   };
 }
 
+function toPublicTftStage(stage: TournamentWithRelations["tftStages"][number]): PublicTftStage {
+  return {
+    id: stage.id,
+    sequence: stage.sequence,
+    isFinal: stage.isFinal,
+    gameLimit: stage.gameLimit,
+    status: stage.status,
+    winner: stage.winner ? toEntry(stage.winner) : null,
+    lobbies: stage.lobbies.map((lobby) => {
+      const entries = lobby.entries.map((seat) => {
+        const placements = lobby.games.flatMap((game) => {
+          const result = game.results.find((item) => item.entryId === seat.entryId);
+          return result ? [{ gameId: game.id, gameNumber: game.number, placement: result.placement, points: result.points }] : [];
+        });
+        const totalPoints = placements.reduce((sum, item) => sum + item.points, 0);
+        return {
+          entry: toEntry(seat.entry),
+          stageSeed: seat.stageSeed,
+          advanced: seat.advanced,
+          placements,
+          totalPoints,
+          checkmateEligible: totalPoints >= 20,
+          rank: 0
+        };
+      });
+      const ranks = new Map(rankTftEntries(entries.map((item) => ({
+        entryId: item.entry.id,
+        stageSeed: item.stageSeed,
+        placements: item.placements.map((placement) => placement.placement)
+      }))).map((row) => [row.entryId, row.rank]));
+      return {
+        id: lobby.id,
+        number: lobby.number,
+        games: lobby.games.map((game) => ({ id: game.id, number: game.number, complete: Boolean(game.completedAt) })),
+        entries: entries.map((item) => ({ ...item, rank: ranks.get(item.entry.id) ?? item.stageSeed })).sort((a, b) => a.rank - b.rank)
+      };
+    })
+  };
+}
+
 function toPublicTournament(tournament: TournamentWithRelations): PublicTournament {
   const entries = tournament.entries.map(toEntry);
   const matches = tournament.matches.map(toPublicMatch);
@@ -70,6 +124,8 @@ function toPublicTournament(tournament: TournamentWithRelations): PublicTourname
     startsAt: tournament.startsAt?.toISOString() ?? null,
     swissRounds: tournament.swissRounds,
     currentRound: tournament.currentRound,
+    tftFinalMode: tournament.tftFinalMode,
+    tftStages: tournament.tftStages.map(toPublicTftStage),
     entries,
     matches,
     standings

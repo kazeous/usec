@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { apiErrorResponse, ApiError, requireAdminApi } from "@/lib/http";
 import { tournamentStatuses } from "@/lib/types";
+import { tftFinalModes } from "@/lib/types";
 
 const updateSchema = z.object({
   title: z.string().trim().min(3).max(150).optional(),
@@ -11,7 +12,8 @@ const updateSchema = z.object({
   registrationMessage: z.string().trim().max(500).nullable().optional(),
   registrationClosesAt: z.string().datetime().nullable().optional(),
   startsAt: z.string().datetime().nullable().optional(),
-  swissRounds: z.number().int().min(3).max(7).nullable().optional()
+  swissRounds: z.number().int().min(3).max(7).nullable().optional(),
+  tftFinalMode: z.enum(tftFinalModes).nullable().optional()
 });
 
 const transitions: Record<string, string[]> = {

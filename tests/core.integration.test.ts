@@ -1,8 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
-import { assembleSoloTeam, enrollExistingTeam } from "@/lib/registrations/service";
+import { assembleSoloTeam, enrollExistingTeam, reviewRegistration } from "@/lib/registrations/service";
 import { generateNextSwissRound, generateTournamentCompetition, recordMatchScore, rollbackMatchResult } from "@/lib/tournaments/service";
+import { generateNextTftStage, generateTftCompetition, recordTftGameResults } from "@/lib/tournaments/tft-service";
 import { reviewStaffApplication, submitStaffApplication } from "@/lib/staff-accounts";
 
 const runDatabaseTests = process.env.RUN_DB_TESTS === "1";
@@ -13,6 +14,7 @@ describe.skipIf(!runDatabaseTests).sequential("database-backed core workflow", (
   const reuseTournamentId = `integration-reuse-${suffix}`;
   const doubleTournamentId = `integration-double-${suffix}`;
   const swissTournamentId = `integration-swiss-${suffix}`;
+  const tftTournamentIds = [8, 16, 32].map((size) => `integration-tft-${size}-${suffix}`);
   const registrationIds: string[] = [];
   const createdTeamIds: string[] = [];
   const createdUserIds: string[] = [];
@@ -27,6 +29,9 @@ describe.skipIf(!runDatabaseTests).sequential("database-backed core workflow", (
     await prisma.tournament.create({ data: { id: reuseTournamentId, title: "Reuse Cup", game: "valorant", format: "round_robin", status: "draft" } });
     await prisma.tournament.create({ data: { id: doubleTournamentId, title: "Double Cup", game: "cs2", format: "double_elimination", status: "draft" } });
     await prisma.tournament.create({ data: { id: swissTournamentId, title: "Swiss Cup", game: "valorant", format: "swiss", status: "draft", swissRounds: 3 } });
+    for (const [index, id] of tftTournamentIds.entries()) {
+      await prisma.tournament.create({ data: { id, title: `TFT ${[8, 16, 32][index]} Cup`, game: "tft", format: "tft_lobby", status: "draft", tftFinalMode: "fixed_games" } });
+    }
     for (let index = 0; index < 5; index += 1) {
       const registration = await prisma.registration.create({
         data: {
@@ -42,7 +47,7 @@ describe.skipIf(!runDatabaseTests).sequential("database-backed core workflow", (
   });
 
   afterAll(async () => {
-    await prisma.tournament.deleteMany({ where: { id: { in: [tournamentId, reuseTournamentId, doubleTournamentId, swissTournamentId] } } });
+    await prisma.tournament.deleteMany({ where: { id: { in: [tournamentId, reuseTournamentId, doubleTournamentId, swissTournamentId, ...tftTournamentIds] } } });
     await prisma.team.deleteMany({ where: { id: { in: createdTeamIds } } });
     await prisma.staffAccountReview.deleteMany({ where: { OR: [{ userId: { in: createdUserIds } }, { reviewerUserId: { in: createdUserIds } }] } });
     await prisma.user.deleteMany({ where: { id: { in: createdUserIds } } });
@@ -161,4 +166,60 @@ describe.skipIf(!runDatabaseTests).sequential("database-backed core workflow", (
     const secondRound = await prisma.match.findMany({ where: { tournamentId: swissTournamentId, round: 2 } });
     expect(secondRound.every((match) => !firstPairs.has([match.teamAEntryId, match.teamBEntryId].sort().join(":")))).toBe(true);
   });
+
+  it("runs complete 8, 16, and 32-player TFT staged competitions", async () => {
+    for (const [fieldIndex, fieldSize] of [8, 16, 32].entries()) {
+      const tftTournamentId = tftTournamentIds[fieldIndex];
+      let firstPlayerIndex = 0;
+      if (fieldSize === 8) {
+        const registration = await prisma.registration.create({
+          data: {
+            tournamentId: tftTournamentId,
+            game: "tft",
+            mode: "solo",
+            members: { create: { fullName: "Registered Tactician", inGameName: "registered#TFT", studentId: `INT-TFT-REG-${suffix}`, universityName: "Integration University", email: `tft-registered-${suffix}@example.edu`, isCaptain: true } }
+          }
+        });
+        const approved = await reviewRegistration({ registrationId: registration.id, action: "approve_new" });
+        expect(approved.resolvedTeamId).toBeTruthy();
+        createdTeamIds.push(approved.resolvedTeamId!);
+        expect(await prisma.tournamentEntry.count({ where: { tournamentId: tftTournamentId } })).toBe(1);
+        firstPlayerIndex = 1;
+      }
+      for (let playerIndex = firstPlayerIndex; playerIndex < fieldSize; playerIndex += 1) {
+        const team = await prisma.team.create({
+          data: {
+            id: `integration-tft-team-${fieldSize}-${suffix}-${playerIndex}`,
+            game: "tft",
+            name: `Tactician ${fieldSize}-${playerIndex + 1}`,
+            players: { create: { fullName: `Tactician ${playerIndex + 1}`, inGameName: `tft${fieldSize}${playerIndex}#TEST`, studentId: `INT-TFT-${fieldSize}-${suffix}-${playerIndex}`, universityName: "Integration University", email: `tft-${fieldSize}-${suffix}-${playerIndex}@example.edu`, isCaptain: true } }
+          }
+        });
+        createdTeamIds.push(team.id);
+        await enrollExistingTeam(tftTournamentId, team.id);
+      }
+      await generateTftCompetition(tftTournamentId);
+
+      while (true) {
+        const stage = await prisma.tftStage.findFirstOrThrow({
+          where: { tournamentId: tftTournamentId },
+          orderBy: { sequence: "desc" },
+          include: { lobbies: { include: { entries: { orderBy: { stageSeed: "asc" } }, games: { orderBy: { number: "asc" } } } } }
+        });
+        for (const lobby of stage.lobbies) {
+          for (const game of lobby.games) {
+            await recordTftGameResults(game.id, lobby.entries.map((seat, index) => ({ entryId: seat.entryId, placement: index + 1 })));
+          }
+        }
+        const completed = await prisma.tftStage.findUniqueOrThrow({ where: { id: stage.id } });
+        expect(completed.status).toBe("complete");
+        if (stage.isFinal) break;
+        await generateNextTftStage(tftTournamentId);
+      }
+
+      const tournament = await prisma.tournament.findUniqueOrThrow({ where: { id: tftTournamentId } });
+      expect(tournament.status).toBe("complete");
+      expect(await prisma.tftStage.count({ where: { tournamentId: tftTournamentId } })).toBe(Math.log2(fieldSize / 8) + 1);
+    }
+  }, 60_000);
 });

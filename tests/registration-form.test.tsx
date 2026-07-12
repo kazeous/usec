@@ -19,4 +19,12 @@ describe("RegistrationForm roster size", () => {
     expect(screen.getByText("Player 6 · Reserve")).toBeInTheDocument();
     expect(screen.getByText("Player 7 · Reserve")).toBeInTheDocument();
   });
+
+  it("presents TFT as an individual Riot ID registration", () => {
+    render(<RegistrationForm tournaments={[{ id: "tft-1", title: "Campus TFT", game: "tft" }]} />);
+    expect(screen.getByText(/individual competition/i)).toBeInTheDocument();
+    expect(screen.getByLabelText("Riot ID")).toBeInTheDocument();
+    expect(screen.queryByText("Team registration")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Team name")).not.toBeInTheDocument();
+  });
 });

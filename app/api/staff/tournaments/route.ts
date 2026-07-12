@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { apiErrorResponse, requireAdminApi, requireStaffApi } from "@/lib/http";
-import { games, tournamentFormats } from "@/lib/types";
+import { games, tftFinalModes, tournamentFormats } from "@/lib/types";
 
 const createSchema = z.object({
   title: z.string().trim().min(3).max(150),
@@ -12,7 +12,11 @@ const createSchema = z.object({
   registrationMessage: z.string().trim().max(500).optional(),
   startsAt: z.string().datetime().optional().nullable(),
   registrationClosesAt: z.string().datetime().optional().nullable(),
-  swissRounds: z.number().int().min(3).max(7).optional().nullable()
+  swissRounds: z.number().int().min(3).max(7).optional().nullable(),
+  tftFinalMode: z.enum(tftFinalModes).optional().nullable()
+}).superRefine((value, context) => {
+  const compatible = value.game === "tft" ? value.format === "tft_lobby" : value.format !== "tft_lobby";
+  if (!compatible) context.addIssue({ code: z.ZodIssueCode.custom, path: ["format"], message: "The selected game and tournament format are incompatible." });
 });
 
 export async function GET(request: Request) {

@@ -3,11 +3,14 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { gameConfigs } from "@/lib/game-config";
-import { tournamentFormats, type TournamentFormat } from "@/lib/types";
+import { tournamentFormats, type Game, type TftFinalMode, type TournamentFormat } from "@/lib/types";
 
 export function TournamentCreateForm() {
   const [message, setMessage] = useState("");
   const [format, setFormat] = useState<TournamentFormat>("single_elimination");
+  const [game, setGame] = useState<Game>("valorant");
+  const [tftFinalMode, setTftFinalMode] = useState<TftFinalMode>("fixed_games");
+  const compatibleFormats = tournamentFormats.filter((option) => game === "tft" ? option === "tft_lobby" : option !== "tft_lobby");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -26,7 +29,8 @@ export function TournamentCreateForm() {
         registrationMessage: formData.get("registrationMessage"),
         startsAt: formData.get("startsAt") ? new Date(String(formData.get("startsAt"))).toISOString() : null,
         registrationClosesAt: formData.get("registrationClosesAt") ? new Date(String(formData.get("registrationClosesAt"))).toISOString() : null,
-        swissRounds: format === "swiss" ? Number(formData.get("swissRounds") || 3) : null
+        swissRounds: format === "swiss" ? Number(formData.get("swissRounds") || 3) : null,
+        tftFinalMode: game === "tft" ? tftFinalMode : null
       })
     });
 
@@ -35,6 +39,8 @@ export function TournamentCreateForm() {
     if (response.ok) {
       event.currentTarget.reset();
       setFormat("single_elimination");
+      setGame("valorant");
+      setTftFinalMode("fixed_games");
     }
   }
 
@@ -50,7 +56,7 @@ export function TournamentCreateForm() {
       <div className="grid gap-3 md:grid-cols-2">
         <label className="grid gap-2 text-sm font-bold">
           Game
-          <select className="field" name="game" defaultValue="valorant">
+          <select className="field" name="game" value={game} onChange={(event) => { const next = event.target.value as Game; setGame(next); setFormat(next === "tft" ? "tft_lobby" : format === "tft_lobby" ? "single_elimination" : format); }}>
             {Object.entries(gameConfigs).map(([key, config]) => (
               <option key={key} value={key}>
                 {config.label}
@@ -61,7 +67,7 @@ export function TournamentCreateForm() {
         <label className="grid gap-2 text-sm font-bold">
           Format
           <select className="field" name="format" value={format} onChange={(event) => setFormat(event.target.value as TournamentFormat)}>
-            {tournamentFormats.map((option) => (
+            {compatibleFormats.map((option) => (
               <option key={option} value={option}>
                 {option.replaceAll("_", " ")}
               </option>
@@ -75,6 +81,7 @@ export function TournamentCreateForm() {
           <input className="field" min={3} max={7} name="swissRounds" type="number" defaultValue={3} required />
         </label>
       ) : null}
+      {format === "tft_lobby" ? <label className="grid gap-2 text-sm font-bold">Final format<select className="field" value={tftFinalMode} onChange={(event) => setTftFinalMode(event.target.value as TftFinalMode)}><option value="fixed_games">Fixed six games</option><option value="checkmate">20-point checkmate (maximum eight games)</option></select></label> : null}
       <label className="flex items-center gap-2 text-sm font-bold">
         <input name="registrationOpen" type="checkbox" />
         Open tournament registration

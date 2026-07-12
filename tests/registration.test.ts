@@ -32,6 +32,11 @@ describe("registration validation", () => {
     expect(normalizeRegistrationPayload({ tournamentId: "event-1", game: "lol", mode: "solo", members: [member(1, true)] }).members).toHaveLength(1);
   });
 
+  it("accepts solo TFT players and rejects TFT team registration", () => {
+    expect(normalizeRegistrationPayload({ tournamentId: "event-1", game: "tft", mode: "solo", members: [member(1, true)] }).members).toHaveLength(1);
+    expect(() => normalizeRegistrationPayload({ tournamentId: "event-1", game: "tft", mode: "team", teamName: "Not a TFT team", members: [member(1, true)] })).toThrow("Teamfight Tactics registration is solo only");
+  });
+
   it("accepts five main players plus up to two reserves", () => {
     const sevenPlayerRoster = [member(0, true), member(1), member(2), member(3), member(4), { ...member(5), isReserve: true }, { ...member(6), isReserve: true }];
     expect(normalizeRegistrationPayload({

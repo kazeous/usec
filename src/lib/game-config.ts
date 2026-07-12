@@ -41,6 +41,16 @@ export const gameConfigs: Record<Game, GameConfig> = {
     defaultBestOf: 1,
     defaultMapPool: [],
     futureFeatures: ["Champion draft flow", "Side selection", "Pick/ban analytics"]
+  },
+  tft: {
+    label: "Teamfight Tactics",
+    shortLabel: "TFT",
+    teamSize: 1,
+    maxReservePlayers: 0,
+    hasMapVeto: false,
+    defaultBestOf: 1,
+    defaultMapPool: [],
+    futureFeatures: []
   }
 };
 
@@ -53,6 +63,7 @@ export function formatGame(game: Game) {
 }
 
 export function formatTournamentFormat(format: string) {
+  if (format === "tft_lobby") return "TFT Lobby";
   return format
     .split("_")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))

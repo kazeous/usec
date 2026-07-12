@@ -15,4 +15,12 @@ describe("TournamentCreateForm", () => {
     fireEvent.change(screen.getByLabelText("Format"), { target: { value: "round_robin" } });
     expect(screen.queryByLabelText("Swiss rounds")).not.toBeInTheDocument();
   });
+
+  it("locks TFT to the staged lobby format and exposes final mode", () => {
+    render(createElement(TournamentCreateForm));
+    fireEvent.change(screen.getByLabelText("Game"), { target: { value: "tft" } });
+    expect(screen.getByLabelText("Format")).toHaveValue("tft_lobby");
+    expect(screen.getByLabelText("Final format")).toHaveValue("fixed_games");
+    expect(screen.queryByRole("option", { name: "single elimination" })).not.toBeInTheDocument();
+  });
 });

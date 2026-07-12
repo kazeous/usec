@@ -27,6 +27,7 @@ enum Game {
   valorant
   cs2
   lol
+  tft
 }
 
 enum RegistrationMode {
@@ -45,6 +46,18 @@ enum TournamentFormat {
   double_elimination
   round_robin
   swiss
+  tft_lobby
+}
+
+enum TftFinalMode {
+  fixed_games
+  checkmate
+}
+
+enum TftStageStatus {
+  pending
+  active
+  complete
 }
 
 enum TournamentStatus {
@@ -175,9 +188,11 @@ model Tournament {
   lockBracketAt        DateTime?
   swissRounds          Int?
   currentRound         Int               @default(0)
+  tftFinalMode         TftFinalMode?
   registrations        Registration[]
   entries              TournamentEntry[]
   matches              Match[]
+  tftStages            TftStage[]
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
 
@@ -260,23 +275,103 @@ model Player {
 }
 
 model TournamentEntry {
-  id           String                  @id @default(cuid())
-  tournamentId String
-  tournament   Tournament              @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  teamId       String
-  team         Team                    @relation(fields: [teamId], references: [id], onDelete: Restrict)
-  displayName  String
-  seed         Int?
-  status       EntryStatus             @default(confirmed)
-  players      TournamentEntryPlayer[]
-  matchesAsA   Match[]                 @relation("MatchEntryA")
-  matchesAsB   Match[]                 @relation("MatchEntryB")
-  wins         Match[]                 @relation("MatchWinnerEntry")
-  createdAt    DateTime                @default(now())
-  updatedAt    DateTime                @updatedAt
+  id              String                  @id @default(cuid())
+  tournamentId    String
+  tournament      Tournament              @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  teamId          String
+  team            Team                    @relation(fields: [teamId], references: [id], onDelete: Restrict)
+  displayName     String
+  seed            Int?
+  status          EntryStatus             @default(confirmed)
+  players         TournamentEntryPlayer[]
+  matchesAsA      Match[]                 @relation("MatchEntryA")
+  matchesAsB      Match[]                 @relation("MatchEntryB")
+  wins            Match[]                 @relation("MatchWinnerEntry")
+  tftStageEntries TftStageEntry[]
+  tftResults      TftGameResult[]
+  wonTftStages    TftStage[]              @relation("TftStageWinner")
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
 
   @@unique([tournamentId, teamId])
   @@index([tournamentId, status, seed])
+}
+
+model TftStage {
+  id            String           @id @default(cuid())
+  tournamentId  String
+  tournament    Tournament       @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  sequence      Int
+  isFinal       Boolean          @default(false)
+  gameLimit     Int
+  status        TftStageStatus   @default(pending)
+  winnerEntryId String?
+  winner        TournamentEntry? @relation("TftStageWinner", fields: [winnerEntryId], references: [id], onDelete: SetNull)
+  lobbies       TftLobby[]
+  entries       TftStageEntry[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@unique([tournamentId, sequence])
+  @@index([tournamentId, status])
+}
+
+model TftLobby {
+  id        String          @id @default(cuid())
+  stageId   String
+  stage     TftStage        @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  number    Int
+  entries   TftStageEntry[]
+  games     TftGame[]
+  createdAt DateTime        @default(now())
+
+  @@unique([stageId, number])
+}
+
+model TftStageEntry {
+  id        String          @id @default(cuid())
+  stageId   String
+  stage     TftStage        @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  lobbyId   String
+  lobby     TftLobby        @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  entryId   String
+  entry     TournamentEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  stageSeed Int
+  advanced  Boolean?
+  createdAt DateTime        @default(now())
+
+  @@unique([stageId, entryId])
+  @@unique([lobbyId, stageSeed])
+  @@index([lobbyId])
+}
+
+model TftGame {
+  id          String          @id @default(cuid())
+  lobbyId     String
+  lobby       TftLobby        @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  number      Int
+  completedAt DateTime?
+  results     TftGameResult[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([lobbyId, number])
+}
+
+model TftGameResult {
+  id        String          @id @default(cuid())
+  gameId    String
+  game      TftGame         @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  entryId   String
+  entry     TournamentEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  placement Int
+  points    Int
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@unique([gameId, entryId])
+  @@unique([gameId, placement])
+  @@index([entryId])
 }
 
 model TournamentEntryPlayer {

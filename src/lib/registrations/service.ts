@@ -93,6 +93,33 @@ export async function reviewRegistration(input: {
         data: { status: "rejected", reviewNote: input.reviewNote?.trim() || null, reviewedAt: new Date() }
       });
     }
+    if (registration.mode === "solo" && registration.game === "tft") {
+      const member = registration.members[0];
+      if (!member || registration.members.length !== 1) throw new RegistrationOperationError("TFT registration must contain one player.", 409);
+      const team = await tx.team.create({
+        data: {
+          game: "tft",
+          name: member.inGameName,
+          players: {
+            create: {
+              fullName: member.fullName,
+              inGameName: member.inGameName,
+              studentId: member.studentId,
+              universityName: member.universityName,
+              email: member.email,
+              discord: member.discord,
+              isCaptain: true,
+              isReserve: false
+            }
+          }
+        }
+      });
+      await createEntrySnapshot(tx, registration.tournamentId, team.id);
+      return tx.registration.update({
+        where: { id: registration.id },
+        data: { status: "approved", resolvedTeamId: team.id, reviewNote: input.reviewNote?.trim() || null, reviewedAt: new Date() }
+      });
+    }
     if (registration.mode === "solo") {
       return tx.registration.update({
         where: { id: registration.id },

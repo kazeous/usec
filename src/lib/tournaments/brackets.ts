@@ -243,6 +243,8 @@ export function generateCompetition(format: TournamentFormat, participants: Team
         participants.map((participant) => ({ ...participant, wins: 0, gameDifferential: 0, opponents: [], byes: 0 })),
         1
       );
+    case "tft_lobby":
+      throw new Error("TFT lobby competitions use the dedicated TFT service.");
   }
 }
 

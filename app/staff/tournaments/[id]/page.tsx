@@ -4,6 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import { BracketView } from "@/components/tournament/BracketView";
 import { StandingsTable } from "@/components/tournament/StandingsTable";
 import { TournamentOperations } from "@/components/staff/TournamentOperations";
+import { TftOperations } from "@/components/staff/TftOperations";
+import { TftTournamentView } from "@/components/tournament/TftTournamentView";
 import { StaffNav } from "@/components/staff/StaffNav";
 import { requireStaff } from "@/lib/auth";
 import { getStaffTournament } from "@/lib/data";
@@ -32,8 +34,7 @@ export default async function StaffTournamentDetailPage({ params }: { params: Pr
         <Link className="inline-flex items-center gap-2 text-sm font-bold muted" href="/staff/tournaments"><ArrowLeft size={16} aria-hidden />Tournaments</Link>
         <div><h1 className="text-4xl font-black">{tournament.title}</h1><p className="mt-2 muted">{staff.role === "admin" ? "Manage registration, entrants, seeds, competition, scores, and standings." : "View the bracket and open matches to manage scores or vetoes."}</p></div>
         {staff.role === "admin" ? <TournamentOperations tournament={tournament} entries={tournament.entries} teams={teams} solos={solos.map((registration) => ({ id: registration.id, name: registration.members[0]?.fullName ?? "Solo player" }))} /> : null}
-        <StandingsTable standings={tournament.standings} swiss={tournament.format === "swiss"} />
-        <BracketView matches={tournament.matches} staff />
+        {tournament.format === "tft_lobby" ? <><TftOperations tournament={tournament} entries={tournament.entries} stages={tournament.tftStages} canAdmin={staff.role === "admin"} /><TftTournamentView stages={tournament.tftStages} finalMode={tournament.tftFinalMode} /></> : <><StandingsTable standings={tournament.standings} swiss={tournament.format === "swiss"} /><BracketView matches={tournament.matches} staff /></>}
       </main>
     </>
   );

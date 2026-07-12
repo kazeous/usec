@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Send } from "lucide-react";
 import { CaptchaPlaceholder } from "@/components/forms/CaptchaPlaceholder";
 import { gameConfigs } from "@/lib/game-config";
@@ -24,11 +24,21 @@ export function RegistrationForm({ tournaments, initialTournamentId }: { tournam
   const game = tournament?.game ?? "valorant";
   const mainRosterSize = gameConfigs[game].teamSize;
   const maxRosterSize = mainRosterSize + gameConfigs[game].maxReservePlayers;
+  const isTft = game === "tft";
   const teammateSlots = rosterSize - 1;
   const visibleTeammates = useMemo(
     () => mode === "solo" ? [] : Array.from({ length: teammateSlots }, (_, index) => teammates[index] ?? { ...emptyMember }),
     [mode, teammateSlots, teammates]
   );
+
+  useEffect(() => {
+    if (isTft) {
+      setMode("solo");
+      setRosterSize(1);
+    } else if (rosterSize < mainRosterSize) {
+      setRosterSize(mainRosterSize);
+    }
+  }, [isTft, mainRosterSize, rosterSize]);
 
   function updateTeammate(index: number, field: keyof MemberDraft, value: string) {
     setTeammates((current) => {
@@ -101,10 +111,10 @@ export function RegistrationForm({ tournaments, initialTournamentId }: { tournam
         <span className="font-normal muted">{tournament?.registrationMessage ?? "Registration is open."}</span>
       </label>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      {!isTft ? <div className="grid gap-3 sm:grid-cols-2">
         <button className={mode === "team" ? "button button-primary" : "button button-secondary"} type="button" onClick={() => setMode("team")}>Team registration</button>
         <button className={mode === "solo" ? "button button-primary" : "button button-secondary"} type="button" onClick={() => setMode("solo")}>Solo player</button>
-      </div>
+      </div> : <div className="rounded-md border border-[#ded7ca] bg-[#fffdf8] p-3 text-sm font-bold">Teamfight Tactics is an individual competition. Register one player with their Riot ID.</div>}
 
       {mode === "team" ? (
         <div className="grid gap-2 text-sm">
@@ -121,7 +131,7 @@ export function RegistrationForm({ tournaments, initialTournamentId }: { tournam
       {mode === "team" ? <Field id="teamName" label="Team name" /> : null}
       <div className="grid gap-4 md:grid-cols-2">
         <Field id="fullName" label={mode === "team" ? "Captain full name" : "Full name"} />
-        <Field id="inGameName" label="In-game name" placeholder="riot#id" />
+        <Field id="inGameName" label={isTft ? "Riot ID" : "In-game name"} placeholder="riot#id" />
         <Field id="studentId" label="Student ID" />
         <Field id="universityName" label="University name" />
         <Field id="email" label={mode === "team" ? "Captain email" : "Email"} type="email" />
