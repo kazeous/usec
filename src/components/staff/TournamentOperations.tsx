@@ -47,6 +47,7 @@ export function TournamentOperations({ tournament, entries, teams, solos }: {
         <div className="flex flex-wrap gap-3">
           {nextStatus ? <button className="button button-primary w-fit" type="button" onClick={() => mutate(`/api/staff/tournaments/${tournament.id}`, "PATCH", { status: nextStatus, registrationOpen: nextStatus === "registration" })}>Move to {nextStatus}</button> : null}
           {canEnd ? <button className="button button-danger w-fit" type="button" onClick={() => { if (window.confirm("End this tournament? Registration will close and the public status will change to Ended.")) void mutate(`/api/staff/tournaments/${tournament.id}`, "PATCH", { status: "complete", registrationOpen: false }); }}>End tournament</button> : null}
+          {editable ? <button className="button button-danger w-fit" type="button" onClick={async () => { if (window.confirm("Permanently delete this tournament and all its data? This cannot be undone.")) { const response = await fetch(`/api/staff/tournaments/${tournament.id}`, { method: "DELETE" }); if (response.ok) { window.location.href = "/staff"; } else { const result = await response.json().catch(() => ({})); setMessage(result.error ?? "Delete failed."); } } }}><Trash2 size={16} aria-hidden />Delete tournament</button> : null}
         </div>
       </section>
 

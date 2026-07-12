@@ -51,3 +51,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json(updated);
   } catch (error) { return apiErrorResponse(error); }
 }
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    await requireAdminApi(request);
+    const { id } = await params;
+    const current = await prisma.tournament.findUnique({ where: { id } });
+    if (!current) throw new ApiError("Tournament not found.", 404);
+    if (current.status !== "draft" && current.status !== "registration") {
+      throw new ApiError("Only draft or registration tournaments can be deleted.", 409);
+    }
+    await prisma.tournament.delete({ where: { id } });
+    return NextResponse.json({ deleted: true });
+  } catch (error) { return apiErrorResponse(error); }
+}
