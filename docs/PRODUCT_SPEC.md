@@ -9,7 +9,7 @@
 ## Registration and teams
 
 - Every registration belongs to one open tournament and contains normalized roster members. Every player provides an in-game name; only the captain provides an email address.
-- Valorant, CS2, and LoL teams register five main players and may add up to two reserves. A student ID, or a provided email, cannot appear twice in an event.
+- Valorant, CS2, and LoL teams register five main players and may add up to two reserves. TFT players register individually with a Riot ID. A student ID, or a provided email, cannot appear twice in an event.
 - Team approval creates or links a reusable team and snapshots its roster into the tournament entry.
 - Approved solos remain unresolved until staff selects exactly five to create and enroll a team.
 - A reusable team may enter multiple tournaments, while each event retains its historical name, seed, and roster snapshot.
@@ -20,6 +20,8 @@
 - Double elimination persists winner and loser routes and uses a reset final when the lower-bracket finalist wins the first grand final.
 - Round robin schedules every pairing once and ranks by wins, game differential, games won, two-team head-to-head, then seed.
 - Swiss generates one round at a time, avoids rematches when possible, rotates byes, and ranks by wins, Buchholz, game differential, then seed. Staff configures 3–7 rounds.
+- TFT supports 8, 16, 32, or 64 individual players in snake-seeded lobbies of eight. Four-game stages award 8 through 1 points by placement and advance the top four from each lobby with points resetting between stages.
+- TFT finals use either six fixed games or checkmate: a player who previously reached 20 points wins by taking first, with the standings leader winning if nobody converts by game eight.
 
 ## Matches and veto
 
