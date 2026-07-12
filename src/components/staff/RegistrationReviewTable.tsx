@@ -14,7 +14,7 @@ type RegistrationItem = {
   reviewNote?: string | null;
   tournament: { id: string; title: string };
   resolvedTeam?: { id: string; name: string } | null;
-  members: Array<{ fullName: string; inGameName: string; studentId: string; universityName: string; email: string | null; isCaptain: boolean }>;
+  members: Array<{ fullName: string; inGameName: string; studentId: string; universityName: string; email: string | null; isCaptain: boolean; isReserve: boolean }>;
 };
 
 export function RegistrationReviewTable({ registrations, teams }: { registrations: RegistrationItem[]; teams: TeamOption[] }) {
@@ -49,7 +49,7 @@ export function RegistrationReviewTable({ registrations, teams }: { registration
                 <StatusPill value={registration.status} />
               </div>
               <div className="mt-3 grid gap-1 text-sm sm:grid-cols-2">
-                {registration.members.map((member) => <p key={member.studentId}><span className="font-bold">{member.fullName}</span> · {member.inGameName} · {member.studentId}{member.email ? ` · ${member.email}` : ""}</p>)}
+                {registration.members.map((member) => <p key={member.studentId}><span className="font-bold">{member.fullName}</span>{member.isCaptain ? " (Captain)" : member.isReserve ? " (Reserve)" : ""} · {member.inGameName} · {member.studentId}{member.email ? ` · ${member.email}` : ""}</p>)}
               </div>
               {registration.status === "pending" ? (
                 <div className="mt-4 flex flex-wrap gap-2">

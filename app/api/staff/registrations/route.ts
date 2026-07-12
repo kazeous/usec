@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     const tournamentId = url.searchParams.get("tournamentId");
     return NextResponse.json(await prisma.registration.findMany({
       where: tournamentId ? { tournamentId } : undefined,
-      include: { members: { orderBy: { isCaptain: "desc" } }, tournament: true, resolvedTeam: true },
+      include: { members: { orderBy: [{ isCaptain: "desc" }, { isReserve: "asc" }, { createdAt: "asc" }] }, tournament: true, resolvedTeam: true },
       orderBy: { createdAt: "desc" }
     }));
   } catch (error) { return apiErrorResponse(error); }

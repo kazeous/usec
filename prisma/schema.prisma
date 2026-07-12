@@ -216,6 +216,7 @@ model RegistrationMember {
   email          String?
   discord        String?
   isCaptain      Boolean      @default(false)
+  isReserve      Boolean      @default(false)
   createdAt      DateTime     @default(now())
 
   @@unique([registrationId, studentId])
@@ -248,6 +249,7 @@ model Player {
   email          String?
   discord        String?
   isCaptain      Boolean                 @default(false)
+  isReserve      Boolean                 @default(false)
   entrySnapshots TournamentEntryPlayer[]
   createdAt      DateTime                @default(now())
   updatedAt      DateTime                @updatedAt
@@ -290,6 +292,7 @@ model TournamentEntryPlayer {
   email          String?
   discord        String?
   isCaptain      Boolean         @default(false)
+  isReserve      Boolean         @default(false)
 
   @@unique([entryId, playerId])
   @@index([studentId])

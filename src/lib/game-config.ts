@@ -4,6 +4,7 @@ export type GameConfig = {
   label: string;
   shortLabel: string;
   teamSize: number;
+  maxReservePlayers: number;
   hasMapVeto: boolean;
   defaultBestOf: number;
   defaultMapPool: string[];
@@ -15,6 +16,7 @@ export const gameConfigs: Record<Game, GameConfig> = {
     label: "Valorant",
     shortLabel: "VAL",
     teamSize: 5,
+    maxReservePlayers: 2,
     hasMapVeto: true,
     defaultBestOf: 3,
     defaultMapPool: ["Ascent", "Bind", "Haven", "Icebox", "Lotus", "Split", "Sunset"],
@@ -24,6 +26,7 @@ export const gameConfigs: Record<Game, GameConfig> = {
     label: "Counter-Strike 2",
     shortLabel: "CS2",
     teamSize: 5,
+    maxReservePlayers: 2,
     hasMapVeto: true,
     defaultBestOf: 3,
     defaultMapPool: ["Ancient", "Anubis", "Dust II", "Inferno", "Mirage", "Nuke", "Vertigo"],
@@ -33,6 +36,7 @@ export const gameConfigs: Record<Game, GameConfig> = {
     label: "League of Legends",
     shortLabel: "LoL",
     teamSize: 5,
+    maxReservePlayers: 2,
     hasMapVeto: false,
     defaultBestOf: 1,
     defaultMapPool: [],

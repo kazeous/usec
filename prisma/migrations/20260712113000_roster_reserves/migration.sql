@@ -1,0 +1,3 @@
+ALTER TABLE "RegistrationMember" ADD COLUMN "isReserve" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Player" ADD COLUMN "isReserve" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "TournamentEntryPlayer" ADD COLUMN "isReserve" BOOLEAN NOT NULL DEFAULT false;

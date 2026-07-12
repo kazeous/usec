@@ -8,7 +8,8 @@ const member = (index: number, isCaptain = false) => ({
   universityName: "Example University",
   email: `player${index}@example.edu`,
   discord: `player${index}`,
-  isCaptain
+  isCaptain,
+  isReserve: false
 });
 
 describe("registration validation", () => {
@@ -29,6 +30,19 @@ describe("registration validation", () => {
 
   it("accepts exactly one member for solo registration", () => {
     expect(normalizeRegistrationPayload({ tournamentId: "event-1", game: "lol", mode: "solo", members: [member(1, true)] }).members).toHaveLength(1);
+  });
+
+  it("accepts five main players plus up to two reserves", () => {
+    const sevenPlayerRoster = [member(0, true), member(1), member(2), member(3), member(4), { ...member(5), isReserve: true }, { ...member(6), isReserve: true }];
+    expect(normalizeRegistrationPayload({
+      tournamentId: "event-1", game: "lol", mode: "team", teamName: "Full Bench", members: sevenPlayerRoster
+    }).members).toHaveLength(7);
+    expect(() => normalizeRegistrationPayload({
+      tournamentId: "event-1", game: "lol", mode: "team", teamName: "Too Many", members: [...sevenPlayerRoster, { ...member(7), isReserve: true }]
+    })).toThrow();
+    expect(() => normalizeRegistrationPayload({
+      tournamentId: "event-1", game: "valorant", mode: "team", teamName: "Wrong Roles", members: [...sevenPlayerRoster.slice(0, 6), member(6)]
+    })).toThrow("Exactly 5 players must be marked as the main roster");
   });
 
   it("requires only the captain email and every player's in-game name", () => {

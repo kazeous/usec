@@ -24,7 +24,8 @@ export const registrationMemberSchema = z.object({
     z.string().trim().email("Enter a valid captain email.").transform((value) => value.toLowerCase()).optional()
   ),
   discord: z.string().trim().max(100).optional(),
-  isCaptain: z.boolean().default(false)
+  isCaptain: z.boolean().default(false),
+  isReserve: z.boolean().default(false)
 });
 
 export const teammateSchema = registrationMemberSchema.omit({ isCaptain: true });
@@ -40,12 +41,15 @@ export const registrationSchema = z
   })
   .superRefine((value, context) => {
     const requiredTeamSize = gameConfigs[value.game].teamSize;
-    const expectedSize = value.mode === "team" ? requiredTeamSize : 1;
-    if (value.members.length !== expectedSize) {
+    const maxTeamSize = requiredTeamSize + gameConfigs[value.game].maxReservePlayers;
+    const invalidRosterSize = value.mode === "team"
+      ? value.members.length < requiredTeamSize || value.members.length > maxTeamSize
+      : value.members.length !== 1;
+    if (invalidRosterSize) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["members"],
-        message: value.mode === "team" ? `${gameConfigs[value.game].label} teams need exactly ${requiredTeamSize} players.` : "Solo registration must contain one player."
+        message: value.mode === "team" ? `${gameConfigs[value.game].label} teams need ${requiredTeamSize} main players and may include up to ${gameConfigs[value.game].maxReservePlayers} reserves.` : "Solo registration must contain one player."
       });
     }
     if (value.mode === "team" && (!value.teamName || value.teamName.length < 2)) {
@@ -57,6 +61,14 @@ export const registrationSchema = z
     const captainIndex = value.members.findIndex((member) => member.isCaptain);
     if (captainIndex >= 0 && !value.members[captainIndex].email) {
       context.addIssue({ code: z.ZodIssueCode.custom, path: ["members", captainIndex, "email"], message: "Captain email is required." });
+    }
+    if (captainIndex >= 0 && value.members[captainIndex].isReserve) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["members", captainIndex, "isReserve"], message: "The captain must be on the main roster." });
+    }
+    const reserveCount = value.members.filter((member) => member.isReserve).length;
+    const expectedReserveCount = value.mode === "team" ? Math.max(0, value.members.length - requiredTeamSize) : 0;
+    if (reserveCount !== expectedReserveCount) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["members"], message: `Exactly ${requiredTeamSize} players must be marked as the main roster.` });
     }
     const studentIds = value.members.map((member) => member.studentId.toLowerCase());
     const emails = value.members.flatMap((member) => member.email ? [member.email.toLowerCase()] : []);
@@ -97,7 +109,8 @@ export function registrationMembersFromLegacy(input: {
       inGameName: input.inGameName,
       email: input.email,
       discord: input.discord,
-      isCaptain: true
+      isCaptain: true,
+      isReserve: false
     },
     ...(input.teammates ?? []).map((member) => ({ ...member, isCaptain: false }))
   ];

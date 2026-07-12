@@ -39,7 +39,8 @@ async function main() {
         universityName: "HCMUS",
         email: `${slug(name)}-${playerIndex + 1}@demo.usec.local`,
         discord: `${slug(name)}-${playerIndex + 1}`,
-        isCaptain: playerIndex === 0
+        isCaptain: playerIndex === 0,
+        isReserve: false
       }));
       const team = await prisma.team.create({ data: { id: teamId, game: spec.game, name, players: { create: players } }, include: { players: true } });
       await prisma.tournamentEntry.create({
@@ -57,7 +58,8 @@ async function main() {
               universityName: player.universityName,
               email: player.email,
               discord: player.discord,
-              isCaptain: player.isCaptain
+              isCaptain: player.isCaptain,
+              isReserve: player.isReserve
             }))
           }
         }

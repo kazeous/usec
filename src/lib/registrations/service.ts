@@ -42,8 +42,11 @@ async function createEntrySnapshot(tx: Tx, tournamentId: string, teamId: string)
   const team = await tx.team.findUnique({ where: { id: teamId }, include: { players: true } });
   if (!team) throw new RegistrationOperationError("Team not found.", 404);
   if (team.game !== tournament.game) throw new RegistrationOperationError("The team game does not match the tournament.");
-  if (team.players.length !== gameConfigs[tournament.game].teamSize) {
-    throw new RegistrationOperationError(`The team must have exactly ${gameConfigs[tournament.game].teamSize} players.`);
+  const mainRosterSize = gameConfigs[tournament.game].teamSize;
+  const maxRosterSize = mainRosterSize + gameConfigs[tournament.game].maxReservePlayers;
+  const mainPlayers = team.players.filter((player) => !player.isReserve);
+  if (team.players.length < mainRosterSize || team.players.length > maxRosterSize || mainPlayers.length !== mainRosterSize) {
+    throw new RegistrationOperationError(`The team must have ${mainRosterSize} main players and no more than ${gameConfigs[tournament.game].maxReservePlayers} reserves.`);
   }
   await assertRosterAvailable(tx, tournamentId, team.players);
   const highestSeed = await tx.tournamentEntry.aggregate({ where: { tournamentId }, _max: { seed: true } });
@@ -62,7 +65,8 @@ async function createEntrySnapshot(tx: Tx, tournamentId: string, teamId: string)
           universityName: player.universityName,
           email: player.email?.toLowerCase(),
           discord: player.discord,
-          isCaptain: player.isCaptain
+          isCaptain: player.isCaptain,
+          isReserve: player.isReserve
         }))
       }
     }
@@ -78,7 +82,7 @@ export async function reviewRegistration(input: {
   return prisma.$transaction(async (tx) => {
     const registration = await tx.registration.findUnique({
       where: { id: input.registrationId },
-      include: { members: { orderBy: { isCaptain: "desc" } }, tournament: true }
+      include: { members: { orderBy: [{ isCaptain: "desc" }, { isReserve: "asc" }, { createdAt: "asc" }] }, tournament: true }
     });
     if (!registration) throw new RegistrationOperationError("Registration not found.", 404);
     await assertTournamentEditable(tx, registration.tournamentId);
@@ -112,7 +116,8 @@ export async function reviewRegistration(input: {
               universityName: member.universityName,
               email: member.email,
               discord: member.discord,
-              isCaptain: member.isCaptain
+              isCaptain: member.isCaptain,
+              isReserve: member.isReserve
             }))
           }
         }
@@ -165,7 +170,8 @@ export async function assembleSoloTeam(input: { tournamentId: string; registrati
             universityName: member.universityName,
             email: member.email,
             discord: member.discord,
-            isCaptain: index === 0
+            isCaptain: index === 0,
+            isReserve: false
           }))
         }
       }

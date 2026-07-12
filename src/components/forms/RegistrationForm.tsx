@@ -18,10 +18,13 @@ export function RegistrationForm({ tournaments, initialTournamentId }: { tournam
   const [message, setMessage] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaResetSignal, setCaptchaResetSignal] = useState(0);
-  const [teammates, setTeammates] = useState<MemberDraft[]>(Array.from({ length: 4 }, () => ({ ...emptyMember })));
+  const [rosterSize, setRosterSize] = useState(5);
+  const [teammates, setTeammates] = useState<MemberDraft[]>(Array.from({ length: 6 }, () => ({ ...emptyMember })));
   const tournament = tournaments.find((item) => item.id === tournamentId);
   const game = tournament?.game ?? "valorant";
-  const teammateSlots = gameConfigs[game].teamSize - 1;
+  const mainRosterSize = gameConfigs[game].teamSize;
+  const maxRosterSize = mainRosterSize + gameConfigs[game].maxReservePlayers;
+  const teammateSlots = rosterSize - 1;
   const visibleTeammates = useMemo(
     () => mode === "solo" ? [] : Array.from({ length: teammateSlots }, (_, index) => teammates[index] ?? { ...emptyMember }),
     [mode, teammateSlots, teammates]
@@ -53,7 +56,8 @@ export function RegistrationForm({ tournaments, initialTournamentId }: { tournam
       universityName: String(data.get("universityName") ?? ""),
       email: String(data.get("email") ?? ""),
       discord: String(data.get("discord") ?? ""),
-      isCaptain: true
+      isCaptain: true,
+      isReserve: false
     };
     try {
       const response = await fetch("/api/registration", {
@@ -64,14 +68,14 @@ export function RegistrationForm({ tournaments, initialTournamentId }: { tournam
           game,
           mode,
           teamName: String(data.get("teamName") ?? ""),
-          members: [captain, ...visibleTeammates.map((member) => ({ ...member, isCaptain: false }))],
+          members: [captain, ...visibleTeammates.map((member, index) => ({ ...member, isCaptain: false, isReserve: index + 1 >= mainRosterSize }))],
           captchaToken
         })
       });
       const result = await response.json().catch(() => ({ error: "Registration could not be submitted." }));
       if (!response.ok) throw new Error(result.error ?? "Registration could not be submitted.");
       form.reset();
-      setTeammates(Array.from({ length: 4 }, () => ({ ...emptyMember })));
+      setTeammates(Array.from({ length: 6 }, () => ({ ...emptyMember })));
       setStatus("success");
       setMessage("Registration submitted. Staff will review it soon.");
     } catch (error) {
@@ -102,6 +106,18 @@ export function RegistrationForm({ tournaments, initialTournamentId }: { tournam
         <button className={mode === "solo" ? "button button-primary" : "button button-secondary"} type="button" onClick={() => setMode("solo")}>Solo player</button>
       </div>
 
+      {mode === "team" ? (
+        <div className="grid gap-2 text-sm">
+          <label className="font-bold" htmlFor="rosterSize">How many players are you registering?</label>
+          <select className="field" id="rosterSize" aria-describedby="rosterSizeHint" value={rosterSize} onChange={(event) => setRosterSize(Number(event.target.value))}>
+            {Array.from({ length: maxRosterSize - mainRosterSize + 1 }, (_, index) => mainRosterSize + index).map((size) => (
+              <option key={size} value={size}>{size} players{size > mainRosterSize ? ` (${size - mainRosterSize} reserve${size - mainRosterSize === 1 ? "" : "s"})` : " (main roster only)"}</option>
+            ))}
+          </select>
+          <span className="muted" id="rosterSizeHint">Register {mainRosterSize} main players and up to {gameConfigs[game].maxReservePlayers} reserves.</span>
+        </div>
+      ) : null}
+
       {mode === "team" ? <Field id="teamName" label="Team name" /> : null}
       <div className="grid gap-4 md:grid-cols-2">
         <Field id="fullName" label={mode === "team" ? "Captain full name" : "Full name"} />
@@ -114,10 +130,10 @@ export function RegistrationForm({ tournaments, initialTournamentId }: { tournam
 
       {visibleTeammates.length ? (
         <section className="grid gap-4">
-          <div><h2 className="text-lg font-black">Teammates</h2><p className="text-sm muted">Add {teammateSlots} players for a complete {gameConfigs[game].label} roster.</p></div>
+          <div><h2 className="text-lg font-black">Teammates</h2><p className="text-sm muted">Add {teammateSlots} players to register a {rosterSize}-player {gameConfigs[game].label} roster.</p></div>
           {visibleTeammates.map((member, index) => (
             <div key={index} className="grid gap-3 rounded-md border border-[#ded7ca] bg-[#fffdf8] p-4 md:grid-cols-2">
-              <p className="md:col-span-2 text-sm font-black">Player {index + 2}</p>
+              <p className="md:col-span-2 text-sm font-black">Player {index + 2} · {index + 1 >= mainRosterSize ? "Reserve" : "Main roster"}</p>
               {(["fullName", "inGameName", "studentId", "universityName", "discord"] as const).map((field) => (
                 <input key={field} className={field === "discord" ? "field md:col-span-2" : "field"} type="text" required={field !== "discord"} placeholder={{ fullName: "Full name", inGameName: "In-game name (riot#id)", studentId: "Student ID", universityName: "University name", discord: "Discord/contact handle" }[field]} value={member[field]} onChange={(event) => updateTeammate(index, field, event.target.value)} />
               ))}

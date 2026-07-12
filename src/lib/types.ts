@@ -95,6 +95,7 @@ export type RegistrationMemberInput = {
   email?: string;
   discord?: string;
   isCaptain?: boolean;
+  isReserve?: boolean;
 };
 
 export type TeammateInput = Omit<RegistrationMemberInput, "isCaptain">;

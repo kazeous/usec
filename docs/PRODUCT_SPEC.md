@@ -9,7 +9,7 @@
 ## Registration and teams
 
 - Every registration belongs to one open tournament and contains normalized roster members. Every player provides an in-game name; only the captain provides an email address.
-- Valorant, CS2, and LoL rosters contain five unique students. A student ID, or a provided email, cannot appear twice in an event.
+- Valorant, CS2, and LoL teams register five main players and may add up to two reserves. A student ID, or a provided email, cannot appear twice in an event.
 - Team approval creates or links a reusable team and snapshots its roster into the tournament entry.
 - Approved solos remain unresolved until staff selects exactly five to create and enroll a team.
 - A reusable team may enter multiple tournaments, while each event retains its historical name, seed, and roster snapshot.
