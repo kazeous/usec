@@ -58,8 +58,8 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const { id } = await params;
     const current = await prisma.tournament.findUnique({ where: { id } });
     if (!current) throw new ApiError("Tournament not found.", 404);
-    if (current.status !== "draft" && current.status !== "registration") {
-      throw new ApiError("Only draft or registration tournaments can be deleted.", 409);
+    if (current.status !== "draft" && current.status !== "registration" && current.status !== "archived") {
+      throw new ApiError("Only draft, registration, or archived tournaments can be deleted.", 409);
     }
     await prisma.tournament.delete({ where: { id } });
     return NextResponse.json({ deleted: true });
