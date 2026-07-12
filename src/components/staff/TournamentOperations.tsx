@@ -19,6 +19,7 @@ export function TournamentOperations({ tournament, entries, teams, solos }: {
   const [selectedSolos, setSelectedSolos] = useState<string[]>([]);
   const [teamName, setTeamName] = useState("");
   const editable = tournament.status === "draft" || tournament.status === "registration";
+  const canEnd = tournament.status === "registration" || tournament.status === "seeded" || tournament.status === "live";
   const availableTeams = useMemo(() => teams.filter((team) => team.game === tournament.game && !entries.some((entry) => entry.name === team.name)), [teams, entries, tournament.game]);
 
   async function mutate(url: string, method: string, body?: unknown) {
@@ -39,10 +40,13 @@ export function TournamentOperations({ tournament, entries, teams, solos }: {
           <label className="grid gap-2 text-sm font-bold">Starts at<input className="field" name="startsAt" type="datetime-local" defaultValue={tournament.startsAt?.slice(0, 16) ?? ""} disabled={!editable} /></label>
           <label className="grid gap-2 text-sm font-bold">Registration closes<input className="field" name="registrationClosesAt" type="datetime-local" defaultValue={tournament.registrationClosesAt?.slice(0, 16) ?? ""} disabled={!editable} /></label>
           {tournament.format === "swiss" ? <label className="grid gap-2 text-sm font-bold">Swiss rounds<input className="field" name="swissRounds" type="number" min={3} max={7} defaultValue={tournament.swissRounds ?? 3} disabled={!editable} /></label> : <span />}
-          <label className="flex items-center gap-2 text-sm font-bold"><input name="registrationOpen" type="checkbox" defaultChecked={tournament.registrationOpen} disabled={tournament.status !== "registration"} />Open</label>
-          <button className="button button-secondary w-fit" type="submit" disabled={!editable}><Save size={16} aria-hidden />Save</button>
+          <label className="flex items-center gap-2 text-sm font-bold"><input name="registrationOpen" type="checkbox" defaultChecked={tournament.registrationOpen} disabled={tournament.status !== "registration"} />Registration open</label>
+          <button className="button button-secondary w-fit" type="submit" disabled={!editable}><Save size={16} aria-hidden />Save registration settings</button>
         </form>
-        {nextStatus ? <button className="button button-primary w-fit" type="button" onClick={() => mutate(`/api/staff/tournaments/${tournament.id}`, "PATCH", { status: nextStatus, registrationOpen: nextStatus === "registration" })}>Move to {nextStatus}</button> : null}
+        <div className="flex flex-wrap gap-3">
+          {nextStatus ? <button className="button button-primary w-fit" type="button" onClick={() => mutate(`/api/staff/tournaments/${tournament.id}`, "PATCH", { status: nextStatus, registrationOpen: nextStatus === "registration" })}>Move to {nextStatus}</button> : null}
+          {canEnd ? <button className="button button-danger w-fit" type="button" onClick={() => { if (window.confirm("End this tournament? Registration will close and the public status will change to Ended.")) void mutate(`/api/staff/tournaments/${tournament.id}`, "PATCH", { status: "complete", registrationOpen: false }); }}>End tournament</button> : null}
+        </div>
       </section>
 
       <section className="panel grid gap-4 p-5">

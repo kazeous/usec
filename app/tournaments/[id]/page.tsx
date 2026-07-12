@@ -5,7 +5,7 @@ import { BracketView } from "@/components/tournament/BracketView";
 import { StandingsTable } from "@/components/tournament/StandingsTable";
 import { GameBadge } from "@/components/GameBadge";
 import { SiteHeader } from "@/components/SiteHeader";
-import { StatusPill } from "@/components/StatusPill";
+import { TournamentStatusPill } from "@/components/TournamentStatusPill";
 import { getPublicTournament } from "@/lib/data";
 import { formatTournamentFormat } from "@/lib/game-config";
 
@@ -31,7 +31,7 @@ export default async function TournamentDetailPage({ params }: { params: Promise
           <div>
             <div className="mb-3 flex flex-wrap gap-2">
               <GameBadge game={tournament.game} />
-              <StatusPill value={tournament.status} />
+              <TournamentStatusPill status={tournament.status} registrationOpen={tournament.registrationOpen} />
               <span className="rounded-full border border-[#cfc6b8] px-2.5 py-1 text-xs font-bold">
                 {formatTournamentFormat(tournament.format)}
               </span>

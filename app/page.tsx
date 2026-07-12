@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Brackets, ChevronDown, ClipboardList } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { GameBadge } from "@/components/GameBadge";
-import { StatusPill } from "@/components/StatusPill";
+import { TournamentStatusPill } from "@/components/TournamentStatusPill";
 import { getPublicTournaments } from "@/lib/data";
 import { formatTournamentFormat } from "@/lib/game-config";
 
@@ -11,6 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const tournaments = await getPublicTournaments();
   const featured = tournaments[0];
+  const hasOpenRegistration = tournaments.some((tournament) => tournament.registrationOpen);
 
   return (
     <>
@@ -28,10 +29,17 @@ export default async function HomePage() {
                 Click register for opening tournament, View brackets for yours&apos; joined match.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <Link className="button button-primary" href="/register">
-                  <ClipboardList size={18} aria-hidden />
-                  Register now
-                </Link>
+                {hasOpenRegistration ? (
+                  <Link className="button button-primary" href="/register">
+                    <ClipboardList size={18} aria-hidden />
+                    Register now
+                  </Link>
+                ) : (
+                  <span className="button button-secondary cursor-not-allowed opacity-70" aria-disabled="true">
+                    <ClipboardList size={18} aria-hidden />
+                    Registration closed
+                  </span>
+                )}
                 <Link className="button button-secondary" href="/tournaments">
                   <Brackets size={18} aria-hidden />
                   View brackets
@@ -46,7 +54,7 @@ export default async function HomePage() {
               {featured ? (
                 <div className="mt-5 grid gap-4">
                   <div className="flex flex-wrap gap-2">
-                    <StatusPill value={featured.status} />
+                    <TournamentStatusPill status={featured.status} registrationOpen={featured.registrationOpen} />
                     <span className="rounded-full border border-[#cfc6b8] px-2.5 py-1 text-xs font-bold">
                       {formatTournamentFormat(featured.format)}
                     </span>
@@ -57,7 +65,7 @@ export default async function HomePage() {
                     <Metric value={featured.registrationOpen ? "Open" : "Closed"} label="Reg" />
                   </div>
                   <Link className="button button-secondary" href={`/tournaments/${featured.id}`}>
-                    Open event
+                    View event
                     <ArrowRight size={16} aria-hidden />
                   </Link>
                 </div>

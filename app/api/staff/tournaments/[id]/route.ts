@@ -16,8 +16,8 @@ const updateSchema = z.object({
 
 const transitions: Record<string, string[]> = {
   draft: ["draft", "registration"],
-  registration: ["draft", "registration", "seeded"],
-  seeded: ["seeded", "live"],
+  registration: ["draft", "registration", "seeded", "complete"],
+  seeded: ["seeded", "live", "complete"],
   live: ["live", "complete"],
   complete: ["complete", "archived"],
   archived: ["archived"]

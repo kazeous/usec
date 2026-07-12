@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { gameConfigs } from "@/lib/game-config";
-import { tournamentFormats } from "@/lib/types";
+import { tournamentFormats, type TournamentFormat } from "@/lib/types";
 
 export function TournamentCreateForm() {
   const [message, setMessage] = useState("");
+  const [format, setFormat] = useState<TournamentFormat>("single_elimination");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -20,12 +21,12 @@ export function TournamentCreateForm() {
       body: JSON.stringify({
         title: formData.get("title"),
         game: formData.get("game"),
-        format: formData.get("format"),
+        format,
         registrationOpen: formData.get("registrationOpen") === "on",
         registrationMessage: formData.get("registrationMessage"),
         startsAt: formData.get("startsAt") ? new Date(String(formData.get("startsAt"))).toISOString() : null,
         registrationClosesAt: formData.get("registrationClosesAt") ? new Date(String(formData.get("registrationClosesAt"))).toISOString() : null,
-        swissRounds: formData.get("format") === "swiss" ? Number(formData.get("swissRounds") || 3) : null
+        swissRounds: format === "swiss" ? Number(formData.get("swissRounds") || 3) : null
       })
     });
 
@@ -33,6 +34,7 @@ export function TournamentCreateForm() {
     setMessage(response.ok ? "Tournament created." : result.error ?? "Could not create tournament.");
     if (response.ok) {
       event.currentTarget.reset();
+      setFormat("single_elimination");
     }
   }
 
@@ -46,22 +48,33 @@ export function TournamentCreateForm() {
         <label className="grid gap-2 text-sm font-bold">Registration closes<input className="field" name="registrationClosesAt" type="datetime-local" /></label>
       </div>
       <div className="grid gap-3 md:grid-cols-2">
-        <select className="field" name="game" defaultValue="valorant">
-          {Object.entries(gameConfigs).map(([key, config]) => (
-            <option key={key} value={key}>
-              {config.label}
-            </option>
-          ))}
-        </select>
-        <select className="field" name="format" defaultValue="single_elimination">
-          {tournamentFormats.map((format) => (
-            <option key={format} value={format}>
-              {format.replaceAll("_", " ")}
-            </option>
-          ))}
-        </select>
+        <label className="grid gap-2 text-sm font-bold">
+          Game
+          <select className="field" name="game" defaultValue="valorant">
+            {Object.entries(gameConfigs).map(([key, config]) => (
+              <option key={key} value={key}>
+                {config.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="grid gap-2 text-sm font-bold">
+          Format
+          <select className="field" name="format" value={format} onChange={(event) => setFormat(event.target.value as TournamentFormat)}>
+            {tournamentFormats.map((option) => (
+              <option key={option} value={option}>
+                {option.replaceAll("_", " ")}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
-      <label className="grid gap-2 text-sm font-bold">Swiss rounds<input className="field" min={3} max={7} name="swissRounds" type="number" defaultValue={3} /></label>
+      {format === "swiss" ? (
+        <label className="grid gap-2 text-sm font-bold">
+          Swiss rounds
+          <input className="field" min={3} max={7} name="swissRounds" type="number" defaultValue={3} required />
+        </label>
+      ) : null}
       <label className="flex items-center gap-2 text-sm font-bold">
         <input name="registrationOpen" type="checkbox" />
         Open tournament registration

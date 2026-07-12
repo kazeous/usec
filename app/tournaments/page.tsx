@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { GameBadge } from "@/components/GameBadge";
 import { SiteHeader } from "@/components/SiteHeader";
-import { StatusPill } from "@/components/StatusPill";
+import { TournamentStatusPill } from "@/components/TournamentStatusPill";
 import { getPublicTournaments } from "@/lib/data";
 import { formatTournamentFormat } from "@/lib/game-config";
 
@@ -27,7 +27,7 @@ export default async function TournamentsPage() {
                 <GameBadge game={tournament.game} />
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
-                <StatusPill value={tournament.status} />
+                <TournamentStatusPill status={tournament.status} registrationOpen={tournament.registrationOpen} />
                 <span className="rounded-full border border-[#cfc6b8] px-2.5 py-1 text-xs font-bold">
                   {formatTournamentFormat(tournament.format)}
                 </span>
@@ -35,7 +35,7 @@ export default async function TournamentsPage() {
               <div className="mt-5 flex items-center justify-between gap-3 text-sm font-bold">
                 <span>{tournament.entries.length} teams</span>
                 <span className="inline-flex items-center gap-2">
-                  Open
+                  View
                   <ArrowRight size={16} aria-hidden />
                 </span>
               </div>

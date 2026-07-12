@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { GameBadge } from "@/components/GameBadge";
 import { StaffNav } from "@/components/staff/StaffNav";
 import { TournamentCreateForm } from "@/components/staff/TournamentCreateForm";
-import { StatusPill } from "@/components/StatusPill";
+import { TournamentStatusPill } from "@/components/TournamentStatusPill";
 import { requireStaff } from "@/lib/auth";
 import { getStaffTournaments } from "@/lib/data";
 import { formatTournamentFormat } from "@/lib/game-config";
@@ -31,7 +31,7 @@ export default async function StaffTournamentsPage() {
                 <GameBadge game={tournament.game} />
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
-                <StatusPill value={tournament.status} />
+                <TournamentStatusPill status={tournament.status} registrationOpen={tournament.registrationOpen} />
                 <span className="rounded-full border border-[#cfc6b8] px-2.5 py-1 text-xs font-bold">
                   {formatTournamentFormat(tournament.format)}
                 </span>
