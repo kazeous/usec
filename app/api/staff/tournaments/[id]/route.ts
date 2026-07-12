@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { apiErrorResponse, ApiError, requireAdminApi } from "@/lib/http";
-import { locationModes, participationFormats, tournamentStatuses } from "@/lib/types";
+import { locationModes, participationFormats, tournamentFormats, tournamentStatuses } from "@/lib/types";
 import { tftFinalModes } from "@/lib/types";
 
 const updateSchema = z.object({
   title: z.string().trim().min(3).max(150).optional(),
+  format: z.enum(tournamentFormats).optional(),
   status: z.enum(tournamentStatuses).optional(),
   registrationOpen: z.boolean().optional(),
   registrationMessage: z.string().trim().max(500).nullable().optional(),
@@ -41,10 +42,22 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (payload.registrationOpen && (payload.status ?? current.status) !== "registration") {
       throw new ApiError("Registration can only be opened while the tournament is in registration state.", 409);
     }
+    if (payload.format && payload.format !== current.format) {
+      const compatible = current.game === "tft" ? payload.format === "tft_lobby" : payload.format !== "tft_lobby";
+      if (!compatible) throw new ApiError("The selected game and competition format are incompatible.", 409);
+      if (!["draft", "registration"].includes(current.status) || current.lockBracketAt) {
+        throw new ApiError("Competition format cannot change after the bracket is locked.", 409);
+      }
+      const [matchCount, tftStageCount] = await Promise.all([
+        prisma.match.count({ where: { tournamentId: id } }),
+        prisma.tftStage.count({ where: { tournamentId: id } })
+      ]);
+      if (matchCount > 0 || tftStageCount > 0) throw new ApiError("Remove the generated competition before changing its format.", 409);
+    }
     if (payload.participationFormat) {
       const valid = current.game === "tft" ? payload.participationFormat === "tft" : payload.participationFormat !== "tft";
       if (!valid) throw new ApiError("The selected game and participation format are incompatible.", 409);
-      if (!['draft', 'registration'].includes(current.status) || current.lockBracketAt) throw new ApiError("Participation format cannot change after the bracket is locked.", 409);
+      if (!["draft", "registration"].includes(current.status) || current.lockBracketAt) throw new ApiError("Participation format cannot change after the bracket is locked.", 409);
       const hasRegistrations = await prisma.registration.count({ where: { tournamentId: id } });
       if (hasRegistrations > 0 && payload.participationFormat !== current.participationFormat) throw new ApiError("Remove existing registrations before changing participation format.", 409);
     }
@@ -52,6 +65,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       where: { id },
       data: {
         ...payload,
+        swissRounds: payload.swissRounds !== undefined ? payload.swissRounds : payload.format === "swiss" ? current.swissRounds ?? 3 : payload.format ? null : undefined,
         registrationClosesAt: payload.registrationClosesAt === undefined ? undefined : payload.registrationClosesAt ? new Date(payload.registrationClosesAt) : null,
         startsAt: payload.startsAt === undefined ? undefined : payload.startsAt ? new Date(payload.startsAt) : null,
         registrationOpen: payload.status && payload.status !== "registration" ? false : payload.registrationOpen

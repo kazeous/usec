@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { GitBranch, Plus, Save, Trash2, Users } from "lucide-react";
-import type { Game, LocationMode, ParticipationFormat, TournamentFormat, TournamentStatus } from "@/lib/types";
+import { formatTournamentFormat } from "@/lib/game-config";
+import { tournamentFormats, type Game, type LocationMode, type ParticipationFormat, type TournamentFormat, type TournamentStatus } from "@/lib/types";
 
 type Entry = { id: string; name: string; seed?: number | null };
 type Team = { id: string; name: string; game: Game };
@@ -18,9 +19,11 @@ export function TournamentOperations({ tournament, entries, teams, solos }: {
   const [teamId, setTeamId] = useState("");
   const [selectedSolos, setSelectedSolos] = useState<string[]>([]);
   const [teamName, setTeamName] = useState("");
+  const [competitionFormat, setCompetitionFormat] = useState<TournamentFormat>(tournament.format);
   const editable = tournament.status === "draft" || tournament.status === "registration";
   const canEnd = tournament.status === "registration" || tournament.status === "seeded" || tournament.status === "live";
   const availableTeams = useMemo(() => teams.filter((team) => team.game === tournament.game && !entries.some((entry) => entry.name === team.name)), [teams, entries, tournament.game]);
+  const compatibleFormats = tournamentFormats.filter((format) => tournament.game === "tft" ? format === "tft_lobby" : format !== "tft_lobby");
 
   async function mutate(url: string, method: string, body?: unknown) {
     const response = await fetch(url, { method, headers: body ? { "Content-Type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
@@ -35,16 +38,17 @@ export function TournamentOperations({ tournament, entries, teams, solos }: {
     <div className="grid gap-4">
       <section className="panel grid gap-4 p-5">
         <div><h2 className="text-xl font-black">Event lifecycle and registration</h2><p className="text-sm muted">Draft events are private. Opening registration publishes the event; bracket generation locks rosters.</p></div>
-        <form className="grid gap-3 md:grid-cols-2" onSubmit={(event) => { event.preventDefault(); const form = new FormData(event.currentTarget); const closeValue = String(form.get("registrationClosesAt") ?? ""); const startValue = String(form.get("startsAt") ?? ""); void mutate(`/api/staff/tournaments/${tournament.id}`, "PATCH", { registrationMessage: form.get("registrationMessage"), venue: form.get("venue") || null, locationMode: form.get("locationMode"), participationFormat: form.get("participationFormat"), registrationOpen: form.get("registrationOpen") === "on", registrationClosesAt: closeValue ? new Date(closeValue).toISOString() : null, startsAt: startValue ? new Date(startValue).toISOString() : null, swissRounds: tournament.format === "swiss" ? Number(form.get("swissRounds") || 3) : null }); }}>
+        <form className="grid gap-3 md:grid-cols-2" onSubmit={(event) => { event.preventDefault(); const form = new FormData(event.currentTarget); const closeValue = String(form.get("registrationClosesAt") ?? ""); const startValue = String(form.get("startsAt") ?? ""); void mutate(`/api/staff/tournaments/${tournament.id}`, "PATCH", { format: competitionFormat, registrationMessage: form.get("registrationMessage"), venue: form.get("venue") || null, locationMode: form.get("locationMode"), participationFormat: form.get("participationFormat"), registrationOpen: form.get("registrationOpen") === "on", registrationClosesAt: closeValue ? new Date(closeValue).toISOString() : null, startsAt: startValue ? new Date(startValue).toISOString() : null, swissRounds: competitionFormat === "swiss" ? Number(form.get("swissRounds") || 3) : null }); }}>
           <input className="field md:col-span-2" name="registrationMessage" defaultValue={tournament.registrationMessage ?? ""} placeholder="Registration message" disabled={!editable} />
           <label className="grid gap-2 text-sm font-bold">Place<select className="field" name="locationMode" defaultValue={tournament.locationMode} disabled={!editable}><option value="offline">Offline</option><option value="online">Online</option></select></label>
           <label className="grid gap-2 text-sm font-bold">Participation format<select className="field" name="participationFormat" defaultValue={tournament.participationFormat} disabled={!editable}>{tournament.game === "tft" ? <option value="tft">TFT</option> : <><option value="five_v_five">5v5</option><option value="one_v_one">1v1</option></>}</select></label>
+          <label className="grid gap-2 text-sm font-bold md:col-span-2">Competition format<select className="field" name="format" value={competitionFormat} onChange={(event) => setCompetitionFormat(event.target.value as TournamentFormat)} disabled={!editable || tournament.game === "tft"}>{compatibleFormats.map((format) => <option value={format} key={format}>{formatTournamentFormat(format)}</option>)}</select></label>
           <input className="field md:col-span-2" name="venue" defaultValue={tournament.venue ?? ""} placeholder={tournament.locationMode === "online" ? "Platform or server details (optional)" : "Venue or address (optional)"} disabled={!editable} />
           <label className="grid gap-2 text-sm font-bold">Starts at<input className="field" name="startsAt" type="datetime-local" defaultValue={tournament.startsAt?.slice(0, 16) ?? ""} disabled={!editable} /></label>
           <label className="grid gap-2 text-sm font-bold">Registration closes<input className="field" name="registrationClosesAt" type="datetime-local" defaultValue={tournament.registrationClosesAt?.slice(0, 16) ?? ""} disabled={!editable} /></label>
-          {tournament.format === "swiss" ? <label className="grid gap-2 text-sm font-bold">Swiss rounds<input className="field" name="swissRounds" type="number" min={3} max={7} defaultValue={tournament.swissRounds ?? 3} disabled={!editable} /></label> : <span />}
+          {competitionFormat === "swiss" ? <label className="grid gap-2 text-sm font-bold">Swiss rounds<input className="field" name="swissRounds" type="number" min={3} max={7} defaultValue={tournament.swissRounds ?? 3} disabled={!editable} /></label> : <span />}
           <label className="flex items-center gap-2 text-sm font-bold"><input name="registrationOpen" type="checkbox" defaultChecked={tournament.registrationOpen} disabled={tournament.status !== "registration"} />Registration open</label>
-          <button className="button button-secondary w-fit" type="submit" disabled={!editable}><Save size={16} aria-hidden />Save registration settings</button>
+          <button className="button button-secondary w-fit" type="submit" disabled={!editable}><Save size={16} aria-hidden />Save tournament settings</button>
         </form>
         <div className="flex flex-wrap gap-3">
           {nextStatus ? <button className="button button-primary w-fit" type="button" onClick={() => mutate(`/api/staff/tournaments/${tournament.id}`, "PATCH", { status: nextStatus, registrationOpen: nextStatus === "registration" })}>Move to {nextStatus}</button> : null}
