@@ -16,6 +16,9 @@ export async function POST(request: Request) {
       throw new ApiError("Registration is closed for this tournament.", 403, "registration_closed");
     }
     if (tournament.game !== parsed.game) throw new ApiError("Registration game does not match the tournament.");
+    if (tournament.participationFormat !== "five_v_five" && parsed.mode !== "solo") {
+      throw new ApiError("This tournament accepts individual registration only.", 409, "invalid_registration_mode");
+    }
     const conflict = await prisma.registrationMember.findFirst({
       where: {
         registration: { tournamentId: tournament.id, status: { not: "rejected" } },

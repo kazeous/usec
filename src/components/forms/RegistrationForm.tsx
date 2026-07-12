@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Send } from "lucide-react";
 import { CaptchaPlaceholder } from "@/components/forms/CaptchaPlaceholder";
-import { gameConfigs } from "@/lib/game-config";
-import type { Game } from "@/lib/types";
+import { gameConfigs, getTournamentRosterRules } from "@/lib/game-config";
+import type { Game, ParticipationFormat } from "@/lib/types";
 
-type RegistrationTournament = { id: string; title: string; game: Game; registrationMessage?: string | null };
+type RegistrationTournament = { id: string; title: string; game: Game; participationFormat?: ParticipationFormat; registrationMessage?: string | null };
 type MemberDraft = { fullName: string; inGameName: string; studentId: string; universityName: string; discord: string };
 const emptyMember: MemberDraft = { fullName: "", inGameName: "", studentId: "", universityName: "", discord: "" };
 
@@ -22,9 +22,12 @@ export function RegistrationForm({ tournaments, initialTournamentId }: { tournam
   const [teammates, setTeammates] = useState<MemberDraft[]>(Array.from({ length: 6 }, () => ({ ...emptyMember })));
   const tournament = tournaments.find((item) => item.id === tournamentId);
   const game = tournament?.game ?? "valorant";
-  const mainRosterSize = gameConfigs[game].teamSize;
-  const maxRosterSize = mainRosterSize + gameConfigs[game].maxReservePlayers;
-  const isTft = game === "tft";
+  const participationFormat = tournament?.participationFormat ?? (game === "tft" ? "tft" : "five_v_five");
+  const rules = getTournamentRosterRules(game, participationFormat);
+  const mainRosterSize = rules.mainRosterSize;
+  const maxRosterSize = mainRosterSize + rules.maxReservePlayers;
+  const isIndividual = rules.individual;
+  const isTft = participationFormat === "tft";
   const teammateSlots = rosterSize - 1;
   const visibleTeammates = useMemo(
     () => mode === "solo" ? [] : Array.from({ length: teammateSlots }, (_, index) => teammates[index] ?? { ...emptyMember }),
@@ -32,13 +35,13 @@ export function RegistrationForm({ tournaments, initialTournamentId }: { tournam
   );
 
   useEffect(() => {
-    if (isTft) {
+    if (isIndividual) {
       setMode("solo");
       setRosterSize(1);
     } else if (rosterSize < mainRosterSize) {
       setRosterSize(mainRosterSize);
     }
-  }, [isTft, mainRosterSize, rosterSize]);
+  }, [isIndividual, mainRosterSize, rosterSize]);
 
   function updateTeammate(index: number, field: keyof MemberDraft, value: string) {
     setTeammates((current) => {
@@ -111,10 +114,10 @@ export function RegistrationForm({ tournaments, initialTournamentId }: { tournam
         <span className="font-normal muted">{tournament?.registrationMessage ?? "Registration is open."}</span>
       </label>
 
-      {!isTft ? <div className="grid gap-3 sm:grid-cols-2">
+      {!isIndividual ? <div className="grid gap-3 sm:grid-cols-2">
         <button className={mode === "team" ? "button button-primary" : "button button-secondary"} type="button" onClick={() => setMode("team")}>Team registration</button>
         <button className={mode === "solo" ? "button button-primary" : "button button-secondary"} type="button" onClick={() => setMode("solo")}>Solo player</button>
-      </div> : <div className="rounded-md border border-[#ded7ca] bg-[#fffdf8] p-3 text-sm font-bold">Teamfight Tactics is an individual competition. Register one player with their Riot ID.</div>}
+      </div> : <div className="rounded-md border border-[#ded7ca] bg-[#fffdf8] p-3 text-sm font-bold">{isTft ? "Teamfight Tactics is an individual competition. Register one player with their Riot ID." : "This is a 1v1 tournament. Register one player; approval enrolls that player directly."}</div>}
 
       {mode === "team" ? (
         <div className="grid gap-2 text-sm">
@@ -124,7 +127,7 @@ export function RegistrationForm({ tournaments, initialTournamentId }: { tournam
               <option key={size} value={size}>{size} players{size > mainRosterSize ? ` (${size - mainRosterSize} reserve${size - mainRosterSize === 1 ? "" : "s"})` : " (main roster only)"}</option>
             ))}
           </select>
-          <span className="muted" id="rosterSizeHint">Register {mainRosterSize} main players and up to {gameConfigs[game].maxReservePlayers} reserves.</span>
+          <span className="muted" id="rosterSizeHint">Register {mainRosterSize} main players and up to {rules.maxReservePlayers} reserves.</span>
         </div>
       ) : null}
 

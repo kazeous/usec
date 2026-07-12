@@ -27,4 +27,11 @@ describe("RegistrationForm roster size", () => {
     expect(screen.queryByText("Team registration")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Team name")).not.toBeInTheDocument();
   });
+
+  it("presents 1v1 tournaments as direct individual registration", () => {
+    render(<RegistrationForm tournaments={[{ id: "duel-1", title: "Campus Duel", game: "valorant", participationFormat: "one_v_one" }]} />);
+    expect(screen.getByText(/This is a 1v1 tournament/i)).toBeInTheDocument();
+    expect(screen.queryByText("Team registration")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Team name")).not.toBeInTheDocument();
+  });
 });

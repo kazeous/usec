@@ -30,7 +30,7 @@ describe.skipIf(!runDatabaseTests).sequential("database-backed core workflow", (
     await prisma.tournament.create({ data: { id: doubleTournamentId, title: "Double Cup", game: "cs2", format: "double_elimination", status: "draft" } });
     await prisma.tournament.create({ data: { id: swissTournamentId, title: "Swiss Cup", game: "valorant", format: "swiss", status: "draft", swissRounds: 3 } });
     for (const [index, id] of tftTournamentIds.entries()) {
-      await prisma.tournament.create({ data: { id, title: `TFT ${[8, 16, 32][index]} Cup`, game: "tft", format: "tft_lobby", status: "draft", tftFinalMode: "fixed_games" } });
+      await prisma.tournament.create({ data: { id, title: `TFT ${[8, 16, 32][index]} Cup`, game: "tft", format: "tft_lobby", participationFormat: "tft", status: "draft", tftFinalMode: "fixed_games" } });
     }
     for (let index = 0; index < 5; index += 1) {
       const registration = await prisma.registration.create({

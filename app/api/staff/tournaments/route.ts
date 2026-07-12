@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { apiErrorResponse, requireAdminApi, requireStaffApi } from "@/lib/http";
-import { games, tftFinalModes, tournamentFormats } from "@/lib/types";
+import { games, locationModes, participationFormats, tftFinalModes, tournamentFormats } from "@/lib/types";
 
 const createSchema = z.object({
   title: z.string().trim().min(3).max(150),
@@ -11,6 +11,8 @@ const createSchema = z.object({
   registrationOpen: z.boolean().default(false),
   registrationMessage: z.string().trim().max(500).optional(),
   venue: z.string().trim().max(200).optional().nullable(),
+  locationMode: z.enum(locationModes),
+  participationFormat: z.enum(participationFormats),
   startsAt: z.string().datetime().optional().nullable(),
   registrationClosesAt: z.string().datetime().optional().nullable(),
   swissRounds: z.number().int().min(3).max(7).optional().nullable(),
@@ -18,6 +20,8 @@ const createSchema = z.object({
 }).superRefine((value, context) => {
   const compatible = value.game === "tft" ? value.format === "tft_lobby" : value.format !== "tft_lobby";
   if (!compatible) context.addIssue({ code: z.ZodIssueCode.custom, path: ["format"], message: "The selected game and tournament format are incompatible." });
+  const validParticipation = value.game === "tft" ? value.participationFormat === "tft" : value.participationFormat !== "tft";
+  if (!validParticipation) context.addIssue({ code: z.ZodIssueCode.custom, path: ["participationFormat"], message: "The selected game and participation format are incompatible." });
 });
 
 export async function GET(request: Request) {

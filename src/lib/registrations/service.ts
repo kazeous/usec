@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { gameConfigs } from "@/lib/game-config";
+import { gameConfigs, getTournamentRosterRules } from "@/lib/game-config";
 
 export class RegistrationOperationError extends Error {
   constructor(message: string, public status = 400) {
@@ -42,11 +42,12 @@ async function createEntrySnapshot(tx: Tx, tournamentId: string, teamId: string)
   const team = await tx.team.findUnique({ where: { id: teamId }, include: { players: true } });
   if (!team) throw new RegistrationOperationError("Team not found.", 404);
   if (team.game !== tournament.game) throw new RegistrationOperationError("The team game does not match the tournament.");
-  const mainRosterSize = gameConfigs[tournament.game].teamSize;
-  const maxRosterSize = mainRosterSize + gameConfigs[tournament.game].maxReservePlayers;
+  const rules = getTournamentRosterRules(tournament.game, tournament.participationFormat);
+  const mainRosterSize = rules.mainRosterSize;
+  const maxRosterSize = mainRosterSize + rules.maxReservePlayers;
   const mainPlayers = team.players.filter((player) => !player.isReserve);
   if (team.players.length < mainRosterSize || team.players.length > maxRosterSize || mainPlayers.length !== mainRosterSize) {
-    throw new RegistrationOperationError(`The team must have ${mainRosterSize} main players and no more than ${gameConfigs[tournament.game].maxReservePlayers} reserves.`);
+    throw new RegistrationOperationError(`The team must have ${mainRosterSize} main players and no more than ${rules.maxReservePlayers} reserves.`);
   }
   await assertRosterAvailable(tx, tournamentId, team.players);
   const highestSeed = await tx.tournamentEntry.aggregate({ where: { tournamentId }, _max: { seed: true } });
@@ -93,12 +94,12 @@ export async function reviewRegistration(input: {
         data: { status: "rejected", reviewNote: input.reviewNote?.trim() || null, reviewedAt: new Date() }
       });
     }
-    if (registration.mode === "solo" && registration.game === "tft") {
+    if (registration.mode === "solo" && registration.tournament.participationFormat !== "five_v_five") {
       const member = registration.members[0];
-      if (!member || registration.members.length !== 1) throw new RegistrationOperationError("TFT registration must contain one player.", 409);
+      if (!member || registration.members.length !== 1) throw new RegistrationOperationError("Individual registration must contain one player.", 409);
       const team = await tx.team.create({
         data: {
-          game: "tft",
+          game: registration.game,
           name: member.inGameName,
           players: {
             create: {
@@ -168,6 +169,7 @@ export async function reviewRegistration(input: {
 export async function assembleSoloTeam(input: { tournamentId: string; registrationIds: string[]; teamName: string }) {
   return prisma.$transaction(async (tx) => {
     const tournament = await assertTournamentEditable(tx, input.tournamentId);
+    if (tournament.participationFormat !== "five_v_five") throw new RegistrationOperationError("Solo-team assembly is only available for 5v5 tournaments.", 409);
     const size = gameConfigs[tournament.game].teamSize;
     if (input.registrationIds.length !== size || new Set(input.registrationIds).size !== size) {
       throw new RegistrationOperationError(`Select exactly ${size} unique solo players.`);

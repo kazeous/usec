@@ -12,7 +12,7 @@ type RegistrationItem = {
   status: string;
   teamName?: string | null;
   reviewNote?: string | null;
-  tournament: { id: string; title: string };
+  tournament: { id: string; title: string; participationFormat: "five_v_five" | "one_v_one" | "tft" };
   resolvedTeam?: { id: string; name: string } | null;
   members: Array<{ fullName: string; inGameName: string; studentId: string; universityName: string; email: string | null; isCaptain: boolean; isReserve: boolean }>;
 };
@@ -54,7 +54,7 @@ export function RegistrationReviewTable({ registrations, teams }: { registration
               {registration.status === "pending" ? (
                 <div className="mt-4 flex flex-wrap gap-2">
                   <input className="field basis-full" placeholder="Review note (shown in the registration record)" value={reviewNotes[registration.id] ?? ""} onChange={(event) => setReviewNotes((current) => ({ ...current, [registration.id]: event.target.value }))} />
-                  <button className="button button-primary" type="button" onClick={() => review(registration.id, "approve_new")}><Check size={16} aria-hidden />{registration.game === "tft" ? "Approve and enroll player" : registration.mode === "solo" ? "Approve to solo pool" : "Approve as new team"}</button>
+                  <button className="button button-primary" type="button" onClick={() => review(registration.id, "approve_new")}><Check size={16} aria-hidden />{registration.tournament.participationFormat !== "five_v_five" ? "Approve and enroll player" : registration.mode === "solo" ? "Approve to solo pool" : "Approve as new team"}</button>
                   {registration.mode === "team" && compatibleTeams.length ? (
                     <><select className="field max-w-xs" value={selectedTeams[registration.id] ?? ""} onChange={(event) => setSelectedTeams((current) => ({ ...current, [registration.id]: event.target.value }))}><option value="">Existing team…</option>{compatibleTeams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select><button className="button button-secondary" type="button" disabled={!selectedTeams[registration.id]} onClick={() => review(registration.id, "approve_link")}><Link2 size={16} aria-hidden />Link and enroll</button></>
                   ) : null}

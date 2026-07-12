@@ -1,0 +1,22 @@
+Official game asset sources
+
+No generated artwork is included. These publisher-provided marks are used only
+to identify the game associated with each community tournament.
+
+valorant.png
+  Valorant Asset Kit, Riot Games: V_Logomark_Off-White.png
+  https://playvalorant.com/en-us/media/
+
+lol.svg
+  League of Legends Downloads, Riot Games: flat black icon
+  https://www.leagueoflegends.com/en-us/league-of-legends-downloads/
+
+tft.svg
+  Teamfight Tactics official site masthead, Riot Games
+  https://teamfighttactics.leagueoflegends.com/en-us/
+
+cs2.jpg
+  Counter-Strike 2 official site artwork, Valve
+  https://www.counter-strike.net/cs2
+
+These marks remain the property of their respective owners.

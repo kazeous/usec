@@ -77,7 +77,7 @@ export default async function HomePage() {
             />
             <FaqItem
               question="Can I register by myself or with a team?"
-              answer="Yes. Choose Team registration to submit a complete roster, or Solo player to enter the solo pool. Staff can group approved solo players into a team for the event."
+              answer="It depends on the event. 5v5 tournaments accept complete teams or solo players for the staff-built team pool. 1v1 and TFT tournaments register one player directly."
             />
             <FaqItem
               question="What information should I prepare?"

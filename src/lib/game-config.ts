@@ -1,4 +1,4 @@
-import type { Game } from "@/lib/types";
+import type { Game, ParticipationFormat } from "@/lib/types";
 
 export type GameConfig = {
   label: string;
@@ -9,6 +9,7 @@ export type GameConfig = {
   defaultBestOf: number;
   defaultMapPool: string[];
   futureFeatures: string[];
+  officialImage: string;
 };
 
 export const gameConfigs: Record<Game, GameConfig> = {
@@ -20,7 +21,8 @@ export const gameConfigs: Record<Game, GameConfig> = {
     hasMapVeto: true,
     defaultBestOf: 3,
     defaultMapPool: ["Ascent", "Bind", "Haven", "Icebox", "Lotus", "Split", "Sunset"],
-    futureFeatures: []
+    futureFeatures: [],
+    officialImage: "/images/games/valorant.png"
   },
   cs2: {
     label: "Counter-Strike 2",
@@ -30,7 +32,8 @@ export const gameConfigs: Record<Game, GameConfig> = {
     hasMapVeto: true,
     defaultBestOf: 3,
     defaultMapPool: ["Ancient", "Anubis", "Dust II", "Inferno", "Mirage", "Nuke", "Vertigo"],
-    futureFeatures: []
+    futureFeatures: [],
+    officialImage: "/images/games/cs2.jpg"
   },
   lol: {
     label: "League of Legends",
@@ -40,7 +43,8 @@ export const gameConfigs: Record<Game, GameConfig> = {
     hasMapVeto: false,
     defaultBestOf: 1,
     defaultMapPool: [],
-    futureFeatures: ["Champion draft flow", "Side selection", "Pick/ban analytics"]
+    futureFeatures: ["Champion draft flow", "Side selection", "Pick/ban analytics"],
+    officialImage: "/images/games/lol.svg"
   },
   tft: {
     label: "Teamfight Tactics",
@@ -50,12 +54,28 @@ export const gameConfigs: Record<Game, GameConfig> = {
     hasMapVeto: false,
     defaultBestOf: 1,
     defaultMapPool: [],
-    futureFeatures: []
+    futureFeatures: [],
+    officialImage: "/images/games/tft.svg"
   }
 };
 
 export function getGameConfig(game: Game) {
   return gameConfigs[game];
+}
+
+export function formatParticipationFormat(format: ParticipationFormat) {
+  if (format === "five_v_five") return "5v5";
+  if (format === "one_v_one") return "1v1";
+  return "TFT";
+}
+
+export function getTournamentRosterRules(game: Game, format: ParticipationFormat) {
+  const individual = format === "one_v_one" || format === "tft";
+  return {
+    mainRosterSize: individual ? 1 : gameConfigs[game].teamSize,
+    maxReservePlayers: individual ? 0 : gameConfigs[game].maxReservePlayers,
+    individual
+  };
 }
 
 export function formatGame(game: Game) {

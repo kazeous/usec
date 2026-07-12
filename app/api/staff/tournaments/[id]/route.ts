@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { apiErrorResponse, ApiError, requireAdminApi } from "@/lib/http";
-import { tournamentStatuses } from "@/lib/types";
+import { locationModes, participationFormats, tournamentStatuses } from "@/lib/types";
 import { tftFinalModes } from "@/lib/types";
 
 const updateSchema = z.object({
@@ -11,6 +11,8 @@ const updateSchema = z.object({
   registrationOpen: z.boolean().optional(),
   registrationMessage: z.string().trim().max(500).nullable().optional(),
   venue: z.string().trim().max(200).nullable().optional(),
+  locationMode: z.enum(locationModes).optional(),
+  participationFormat: z.enum(participationFormats).optional(),
   registrationClosesAt: z.string().datetime().nullable().optional(),
   startsAt: z.string().datetime().nullable().optional(),
   swissRounds: z.number().int().min(3).max(7).nullable().optional(),
@@ -38,6 +40,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
     if (payload.registrationOpen && (payload.status ?? current.status) !== "registration") {
       throw new ApiError("Registration can only be opened while the tournament is in registration state.", 409);
+    }
+    if (payload.participationFormat) {
+      const valid = current.game === "tft" ? payload.participationFormat === "tft" : payload.participationFormat !== "tft";
+      if (!valid) throw new ApiError("The selected game and participation format are incompatible.", 409);
+      if (!['draft', 'registration'].includes(current.status) || current.lockBracketAt) throw new ApiError("Participation format cannot change after the bracket is locked.", 409);
+      const hasRegistrations = await prisma.registration.count({ where: { tournamentId: id } });
+      if (hasRegistrations > 0 && payload.participationFormat !== current.participationFormat) throw new ApiError("Remove existing registrations before changing participation format.", 409);
     }
     const updated = await prisma.tournament.update({
       where: { id },

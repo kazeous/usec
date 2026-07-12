@@ -3,6 +3,10 @@ export type Game = (typeof games)[number];
 
 export const tournamentFormats = ["single_elimination", "double_elimination", "round_robin", "swiss", "tft_lobby"] as const;
 export type TournamentFormat = (typeof tournamentFormats)[number];
+export const locationModes = ["online", "offline"] as const;
+export type LocationMode = (typeof locationModes)[number];
+export const participationFormats = ["five_v_five", "one_v_one", "tft"] as const;
+export type ParticipationFormat = (typeof participationFormats)[number];
 export const tftFinalModes = ["fixed_games", "checkmate"] as const;
 export type TftFinalMode = (typeof tftFinalModes)[number];
 export const tournamentStatuses = ["draft", "registration", "seeded", "live", "complete", "archived"] as const;
@@ -114,6 +118,8 @@ export type PublicTournament = {
   registrationOpen: boolean;
   registrationMessage?: string | null;
   venue?: string | null;
+  locationMode: LocationMode;
+  participationFormat: ParticipationFormat;
   registrationClosesAt?: string | null;
   startsAt?: string | null;
   swissRounds?: number | null;

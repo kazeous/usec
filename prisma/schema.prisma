@@ -49,6 +49,17 @@ enum TournamentFormat {
   tft_lobby
 }
 
+enum LocationMode {
+  online
+  offline
+}
+
+enum ParticipationFormat {
+  five_v_five
+  one_v_one
+  tft
+}
+
 enum TftFinalMode {
   fixed_games
   checkmate
@@ -176,26 +187,28 @@ model LoginAttempt {
 }
 
 model Tournament {
-  id                   String            @id @default(cuid())
+  id                   String              @id @default(cuid())
   title                String
   game                 Game
   format               TournamentFormat
-  status               TournamentStatus  @default(draft)
-  registrationOpen     Boolean           @default(false)
+  status               TournamentStatus    @default(draft)
+  registrationOpen     Boolean             @default(false)
   registrationMessage  String?
   venue                String?
+  locationMode         LocationMode        @default(offline)
+  participationFormat  ParticipationFormat @default(five_v_five)
   registrationClosesAt DateTime?
   startsAt             DateTime?
   lockBracketAt        DateTime?
   swissRounds          Int?
-  currentRound         Int               @default(0)
+  currentRound         Int                 @default(0)
   tftFinalMode         TftFinalMode?
   registrations        Registration[]
   entries              TournamentEntry[]
   matches              Match[]
   tftStages            TftStage[]
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
 
   @@index([status, startsAt])
 }
