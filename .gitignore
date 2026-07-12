@@ -24,7 +24,6 @@ prisma/dev.db
 .DS_Store
 .idea/
 
-#Codex
+# Codex
 docs/
 AGENTS.md
-PROGRESS.md
