@@ -26,6 +26,8 @@ Teamfight Tactics staged-lobby tournament support is implemented. Database migra
 - Added staff lobby operations, Riot policy warnings for 8/16-player fields, and public lobby standings.
 - Added automatic one-player team/entry snapshots when staff approves a TFT registration.
 - Added a Prisma migration, unit/UI coverage, and database integration coverage for complete 8/16/32-player flows.
+- Updated homepage tournament card to show open registration count and browse button.
+- Added public `/guidelines` page and staff dashboard editable guidelines (`/staff/guidelines`) backed by `SiteContent` database model.
 
 ## Verification
 

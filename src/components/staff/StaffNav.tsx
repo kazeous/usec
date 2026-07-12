@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ClipboardList, LogOut, ShieldCheck, Swords, Trophy } from "lucide-react";
+import { ClipboardList, LogOut, ScrollText, ShieldCheck, Swords, Trophy } from "lucide-react";
 
 export function StaffNav({ role }: { name: string; role: "staff" | "admin" }) {
   return (
@@ -20,6 +20,10 @@ export function StaffNav({ role }: { name: string; role: "staff" | "admin" }) {
           <Link className="button border-white/20 bg-white/10 text-white" href="/staff/tournaments">
             <Trophy size={16} aria-hidden />
             Tournaments
+          </Link>
+          <Link className="button border-white/20 bg-white/10 text-white" href="/staff/guidelines">
+            <ScrollText size={16} aria-hidden />
+            Guidelines
           </Link>
           {role === "admin" ? <Link className="button border-white/20 bg-white/10 text-white" href="/staff/accounts"><ShieldCheck size={16} aria-hidden />Accounts</Link> : null}
           <Link className="button border-white/20 bg-white/10 text-white" href="/tournaments">

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { CalendarDays, ClipboardList, Shield } from "lucide-react";
+import { CalendarDays, ClipboardList, ScrollText, Shield } from "lucide-react";
 
 export function SiteHeader() {
   return (
@@ -20,6 +20,10 @@ export function SiteHeader() {
           <Link className="button button-secondary" href="/tournaments">
             <CalendarDays size={16} aria-hidden />
             Tournaments
+          </Link>
+          <Link className="button button-secondary" href="/guidelines">
+            <ScrollText size={16} aria-hidden />
+            Guidelines
           </Link>
           <Link className="button button-primary" href="/staff">
             <Shield size={16} aria-hidden />
