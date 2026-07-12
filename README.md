@@ -44,7 +44,9 @@ npm run build
 
 ## Coolify deployment
 
-The production start command runs `prisma migrate deploy` before starting Next.js. Keep the repository's default `npm run start` command in Coolify and provide `DATABASE_URL` to both the build and runtime environments.
+The production start command runs `prisma migrate deploy` before starting Next.js. Provide `DATABASE_URL` to the runtime environment and keep the repository's default `npm run start` command.
+
+For Coolify, select the **Dockerfile** build pack with `/Dockerfile` as the Dockerfile location, `/` as the base directory, and port `3000`. The repository-owned multi-stage image pins the supported Node version and avoids the slower Nixpacks bootstrap.
 
 For an existing disposable development database that predates the checked-in migration, run this once from the application terminal before redeploying:
 
