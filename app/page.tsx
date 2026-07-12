@@ -1,17 +1,14 @@
 import Link from "next/link";
 import { ArrowRight, Brackets, ChevronDown, ClipboardList } from "lucide-react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { GameBadge } from "@/components/GameBadge";
-import { TournamentStatusPill } from "@/components/TournamentStatusPill";
 import { getPublicTournaments } from "@/lib/data";
-import { formatTournamentFormat } from "@/lib/game-config";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const tournaments = await getPublicTournaments();
-  const featured = tournaments[0];
-  const hasOpenRegistration = tournaments.some((tournament) => tournament.registrationOpen);
+  const openCount = tournaments.filter((t) => t.registrationOpen).length;
+  const hasOpenRegistration = openCount > 0;
 
   return (
     <>
@@ -48,30 +45,27 @@ export default async function HomePage() {
             </div>
             <aside className="panel self-end p-5">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="text-xl font-black">{featured?.title ?? "Upcoming event"}</h2>
-                {featured ? <GameBadge game={featured.game} /> : null}
+                <h2 className="text-xl font-black">Tournament status</h2>
               </div>
-              {featured ? (
-                <div className="mt-5 grid gap-4">
-                  <div className="flex flex-wrap gap-2">
-                    <TournamentStatusPill status={featured.status} registrationOpen={featured.registrationOpen} />
-                    <span className="rounded-full border border-[#cfc6b8] px-2.5 py-1 text-xs font-bold">
-                      {formatTournamentFormat(featured.format)}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3 text-center">
-                    <Metric value={featured.entries.length} label="Teams" />
-                    <Metric value={featured.matches.length} label="Matches" />
-                    <Metric value={featured.registrationOpen ? "Open" : "Closed"} label="Reg" />
-                  </div>
-                  <Link className="button button-secondary" href={`/tournaments/${featured.id}`}>
-                    View event
+              <div className="mt-5 grid gap-4">
+                <div className="grid grid-cols-2 gap-3 text-center">
+                  <Metric value={openCount} label="Open reg" />
+                  <Metric value={tournaments.length} label="Total events" />
+                </div>
+                {openCount > 0 ? (
+                  <Link className="button button-primary" href="/register">
+                    <ClipboardList size={16} aria-hidden />
+                    Register now
                     <ArrowRight size={16} aria-hidden />
                   </Link>
-                </div>
-              ) : (
-                <p className="mt-4 muted">No tournaments have been published yet.</p>
-              )}
+                ) : (
+                  <p className="text-center text-sm muted">No tournaments are accepting registrations right now.</p>
+                )}
+                <Link className="button button-secondary" href="/tournaments">
+                  Browse all events
+                  <ArrowRight size={16} aria-hidden />
+                </Link>
+              </div>
             </aside>
           </div>
         </section>
