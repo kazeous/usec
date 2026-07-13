@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Check, Link2, X } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { StatusPill } from "@/components/StatusPill";
 import { gameConfigs } from "@/lib/game-config";
+import { registrationPageSizes, type RegistrationPageSize, type RegistrationStatusFilter } from "@/lib/registrations/query";
 import { games, type Game, type RegistrationStatus } from "@/lib/types";
 
 type TeamOption = { id: string; name: string; game: string };
@@ -19,32 +21,54 @@ type RegistrationItem = {
   members: Array<{ fullName: string; inGameName: string; studentId: string; universityName: string; email: string | null; isCaptain: boolean; isReserve: boolean }>;
 };
 
-type StatusFilter = RegistrationStatus | "all";
 type BulkResult = { succeeded?: string[]; failed?: Array<{ registrationId: string; error: string }>; error?: string };
 
 const statusRank: Record<RegistrationStatus, number> = { pending: 0, approved: 1, rejected: 2 };
 
-export function RegistrationReviewTable({ registrations, teams }: { registrations: RegistrationItem[]; teams: TeamOption[] }) {
+type RegistrationReviewTableProps = {
+  registrations: RegistrationItem[];
+  teams: TeamOption[];
+  filters: { game: Game | "all"; status: RegistrationStatusFilter };
+  pagination: { page: number; pageSize: RegistrationPageSize; total: number; totalPages: number };
+};
+
+export function RegistrationReviewTable({ registrations, teams, filters, pagination }: RegistrationReviewTableProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const registrationsRef = useRef(registrations);
   const [items, setItems] = useState(registrations);
   const [selectedTeams, setSelectedTeams] = useState<Record<string, string>>({});
   const [reviewNotes, setReviewNotes] = useState<Record<string, string>>({});
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [gameFilter, setGameFilter] = useState<Game | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("pending");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [isNavigating, startNavigation] = useTransition();
+
+  useEffect(() => {
+    if (registrationsRef.current === registrations) return;
+    registrationsRef.current = registrations;
+    setItems(registrations);
+    setSelectedIds((current) => current.filter((id) => registrations.some((item) => item.id === id && item.status === "pending")));
+  }, [registrations]);
 
   const groupedItems = useMemo(() => games.map((game) => ({
     game,
     items: items
-      .filter((item) => item.game === game && (gameFilter === "all" || item.game === gameFilter) && (statusFilter === "all" || item.status === statusFilter))
+      .filter((item) => item.game === game && (filters.status === "all" || item.status === filters.status))
       .sort((left, right) => statusRank[left.status] - statusRank[right.status] || left.tournament.title.localeCompare(right.tournament.title))
-  })).filter((group) => group.items.length > 0), [gameFilter, items, statusFilter]);
+  })).filter((group) => group.items.length > 0), [filters.status, items]);
 
   const selectedSet = new Set(selectedIds);
   const visiblePendingIds = groupedItems.flatMap((group) => group.items.filter((item) => item.status === "pending").map((item) => item.id));
   const selectedPendingIds = selectedIds.filter((id) => items.some((item) => item.id === id && item.status === "pending"));
+
+  function changeQuery(changes: Record<string, string | number>) {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(changes)) params.set(key, String(value));
+    startNavigation(() => router.replace(`${pathname}?${params.toString()}`));
+  }
 
   function addSelection(ids: string[]) {
     setSelectedIds((current) => [...new Set([...current, ...ids])].slice(0, 200));
@@ -74,6 +98,7 @@ export function RegistrationReviewTable({ registrations, teams }: { registration
       setItems((current) => current.map((item) => item.id === registrationId ? { ...item, status: nextStatus } : item));
       setSelectedIds((current) => current.filter((id) => id !== registrationId));
       setMessage("Registration updated.");
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not update registration.");
     } finally {
@@ -104,6 +129,7 @@ export function RegistrationReviewTable({ registrations, teams }: { registration
       setItems((current) => current.map((item) => succeededSet.has(item.id) ? { ...item, status: nextStatus } : item));
       setSelectedIds(failed.map((item) => item.registrationId));
       setMessage(`${verb === "approve" ? "Approved" : "Rejected"} ${succeeded.length} registration${succeeded.length === 1 ? "" : "s"}.${failed.length ? ` ${failed.length} failed and remain selected: ${failed[0].error}` : ""}`);
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not update registrations.");
     } finally {
@@ -114,20 +140,25 @@ export function RegistrationReviewTable({ registrations, teams }: { registration
   return (
     <section className="panel p-5">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
-        <div><h2 className="text-xl font-black">Registration review</h2><p className="text-sm muted">Registrations are grouped by game. Select up to 200 pending submissions for one bulk action.</p></div>
+        <div><h2 className="text-xl font-black">Registration review</h2><p className="text-sm muted">Registrations are grouped by game. Bulk actions apply to pending submissions selected on this page.</p></div>
         <div className="flex flex-wrap gap-2">
           <label className="grid gap-1 text-xs font-bold">Game
-            <select className="field min-w-40" aria-label="Filter registrations by game" value={gameFilter} onChange={(event) => setGameFilter(event.target.value as Game | "all")}>
+            <select className="field min-w-40" aria-label="Filter registrations by game" value={filters.game} disabled={isNavigating} onChange={(event) => changeQuery({ game: event.target.value, page: 1 })}>
               <option value="all">All games</option>
               {games.map((game) => <option key={game} value={game}>{gameConfigs[game].label}</option>)}
             </select>
           </label>
           <label className="grid gap-1 text-xs font-bold">Status
-            <select className="field min-w-36" aria-label="Filter registrations by status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}>
+            <select className="field min-w-36" aria-label="Filter registrations by status" value={filters.status} disabled={isNavigating} onChange={(event) => changeQuery({ status: event.target.value, page: 1 })}>
               <option value="pending">Pending</option>
               <option value="all">All statuses</option>
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
+            </select>
+          </label>
+          <label className="grid gap-1 text-xs font-bold">Per page
+            <select className="field min-w-24" aria-label="Registrations per page" value={pagination.pageSize} disabled={isNavigating} onChange={(event) => changeQuery({ pageSize: event.target.value, page: 1 })}>
+              {registrationPageSizes.map((size) => <option key={size} value={size}>{size}</option>)}
             </select>
           </label>
         </div>
@@ -195,6 +226,14 @@ export function RegistrationReviewTable({ registrations, teams }: { registration
         })}
       </div>
       {!groupedItems.length ? <p className="text-sm muted">No registrations match these filters.</p> : null}
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#ded7ca] pt-4">
+        <p className="text-sm muted">Showing {pagination.total ? (pagination.page - 1) * pagination.pageSize + 1 : 0}–{Math.min(pagination.page * pagination.pageSize, pagination.total)} of {pagination.total}</p>
+        <div className="flex items-center gap-2">
+          <button className="button button-secondary" type="button" disabled={pagination.page <= 1 || isNavigating} onClick={() => changeQuery({ page: pagination.page - 1 })}>Previous</button>
+          <span className="text-sm font-bold">Page {pagination.page} of {pagination.totalPages}</span>
+          <button className="button button-secondary" type="button" disabled={pagination.page >= pagination.totalPages || isNavigating} onClick={() => changeQuery({ page: pagination.page + 1 })}>Next</button>
+        </div>
+      </div>
       {message ? <p className="mt-4 text-sm font-bold muted" aria-live="polite">{message}</p> : null}
     </section>
   );

@@ -2,6 +2,14 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RegistrationReviewTable } from "@/components/staff/RegistrationReviewTable";
 
+const navigation = vi.hoisted(() => ({ replace: vi.fn(), refresh: vi.fn() }));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/staff/registrations",
+  useRouter: () => navigation,
+  useSearchParams: () => new URLSearchParams()
+}));
+
 type Registrations = Parameters<typeof RegistrationReviewTable>[0]["registrations"];
 
 function registration(overrides: Partial<Registrations[number]> & Pick<Registrations[number], "id" | "game">): Registrations[number] {
@@ -17,25 +25,38 @@ function registration(overrides: Partial<Registrations[number]> & Pick<Registrat
   };
 }
 
+function renderTable(registrations: Registrations, pagination: Partial<Parameters<typeof RegistrationReviewTable>[0]["pagination"]> = {}) {
+  return render(<RegistrationReviewTable
+    registrations={registrations}
+    teams={[]}
+    filters={{ game: "all", status: "pending" }}
+    pagination={{ page: 1, pageSize: 10, total: registrations.length, totalPages: 1, ...pagination }}
+  />);
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  navigation.replace.mockReset();
+  navigation.refresh.mockReset();
 });
 
 describe("RegistrationReviewTable", () => {
-  it("groups pending registrations in the configured game order and can reveal reviewed records", () => {
-    render(<RegistrationReviewTable registrations={[
+  it("groups the server page in configured game order and navigates filters and page sizes through the URL", () => {
+    renderTable([
       registration({ id: "lol-pending", game: "lol" }),
-      registration({ id: "valorant-approved", game: "valorant", status: "approved" }),
       registration({ id: "valorant-pending", game: "valorant" })
-    ]} teams={[]} />);
+    ], { total: 32, totalPages: 4 });
 
     expect(screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent)).toEqual(["Valorant", "League of Legends"]);
-    expect(screen.queryByText("Player valorant-approved")).not.toBeInTheDocument();
+    expect(screen.getByText("Showing 1–10 of 32")).toBeInTheDocument();
+    expect(screen.getByLabelText("Registrations per page")).toHaveValue("10");
 
     fireEvent.change(screen.getByLabelText("Filter registrations by status"), { target: { value: "all" } });
+    expect(navigation.replace).toHaveBeenCalledWith(expect.stringContaining("status=all"));
 
-    expect(screen.getAllByText("Player valorant-approved")).toHaveLength(2);
+    fireEvent.change(screen.getByLabelText("Registrations per page"), { target: { value: "50" } });
+    expect(navigation.replace).toHaveBeenCalledWith(expect.stringContaining("pageSize=50"));
   });
 
   it("bulk approves successful registrations and keeps failures selected", async () => {
@@ -49,10 +70,10 @@ describe("RegistrationReviewTable", () => {
     vi.stubGlobal("fetch", fetchMock);
     vi.spyOn(window, "confirm").mockReturnValue(true);
 
-    render(<RegistrationReviewTable registrations={[
+    renderTable([
       registration({ id: "tft-one", game: "tft", tournament: { id: "tft-cup", title: "TFT Cup", participationFormat: "tft" } }),
       registration({ id: "tft-two", game: "tft", tournament: { id: "tft-cup", title: "TFT Cup", participationFormat: "tft" } })
-    ]} teams={[]} />);
+    ]);
 
     fireEvent.click(screen.getByLabelText("Select all pending Teamfight Tactics registrations"));
     fireEvent.click(screen.getByRole("button", { name: "Approve selected (2)" }));
@@ -62,5 +83,6 @@ describe("RegistrationReviewTable", () => {
     expect(screen.queryByText("Player tft-one")).not.toBeInTheDocument();
     expect(screen.getAllByText("Player tft-two")).toHaveLength(2);
     expect(screen.getByText("1 selected")).toBeInTheDocument();
+    expect(navigation.refresh).toHaveBeenCalled();
   });
 });
