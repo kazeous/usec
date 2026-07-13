@@ -61,9 +61,9 @@ export function TournamentCreateForm() {
         <label className="grid gap-2 text-sm font-bold">Participation format<select className="field" value={participationFormat} disabled={game === "tft"} onChange={(event) => setParticipationFormat(event.target.value as ParticipationFormat)}>{game === "tft" ? <option value="tft">TFT</option> : <><option value="five_v_five">5v5</option><option value="one_v_one">1v1</option></>}</select></label>
       </div>
       <input className="field" name="venue" placeholder={locationMode === "online" ? "Platform or server details (optional)" : "Venue or address (optional)"} />
-      <div className="grid gap-3 md:grid-cols-2">
-        <label className="grid gap-2 text-sm font-bold">Starts at<input className="field" name="startsAt" type="datetime-local" /></label>
-        <label className="grid gap-2 text-sm font-bold">Registration closes<input className="field" name="registrationClosesAt" type="datetime-local" /></label>
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-1" role="group" aria-label="Tournament schedule">
+        <label className="grid min-w-0 gap-2 text-sm font-bold">Starts at<input className="field min-w-0" name="startsAt" type="datetime-local" /></label>
+        <label className="grid min-w-0 gap-2 text-sm font-bold">Registration closes<input className="field min-w-0" name="registrationClosesAt" type="datetime-local" /></label>
       </div>
       <div className="grid gap-3 md:grid-cols-2">
         <label className="grid gap-2 text-sm font-bold">

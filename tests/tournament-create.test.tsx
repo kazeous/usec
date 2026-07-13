@@ -4,6 +4,14 @@ import { describe, expect, it } from "vitest";
 import { TournamentCreateForm } from "@/components/staff/TournamentCreateForm";
 
 describe("TournamentCreateForm", () => {
+  it("stacks native date-time fields inside the desktop sidebar", () => {
+    render(createElement(TournamentCreateForm));
+
+    expect(screen.getByRole("group", { name: "Tournament schedule" })).toHaveClass("md:grid-cols-2", "lg:grid-cols-1");
+    expect(screen.getByLabelText("Starts at")).toHaveClass("min-w-0");
+    expect(screen.getByLabelText("Registration closes")).toHaveClass("min-w-0");
+  });
+
   it("only shows Swiss rounds for the Swiss format", () => {
     render(createElement(TournamentCreateForm));
 
