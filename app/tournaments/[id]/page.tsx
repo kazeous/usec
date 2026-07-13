@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { BracketView } from "@/components/tournament/BracketView";
 import { TftTournamentView } from "@/components/tournament/TftTournamentView";
-import { StandingsTable } from "@/components/tournament/StandingsTable";
+import { TournamentCompetitionView } from "@/components/tournament/TournamentCompetitionView";
 import { GameBadge } from "@/components/GameBadge";
 import { SiteHeader } from "@/components/SiteHeader";
 import { TournamentStatusPill } from "@/components/TournamentStatusPill";
@@ -42,7 +41,7 @@ export default async function TournamentDetailPage({ params }: { params: Promise
           {tournament.registrationOpen ? <Link className="button button-secondary" href={`/register?tournament=${tournament.id}`}>Register</Link> : null}
         </div>
         <div className="grid gap-6">
-          {tournament.format === "tft_lobby" ? <TftTournamentView stages={tournament.tftStages} finalMode={tournament.tftFinalMode} /> : <><StandingsTable standings={tournament.standings} swiss={tournament.format === "swiss"} /><BracketView matches={tournament.matches} /></>}
+          {tournament.format === "tft_lobby" ? <TftTournamentView stages={tournament.tftStages} finalMode={tournament.tftFinalMode} /> : <TournamentCompetitionView entries={tournament.entries} matches={tournament.matches} standings={tournament.standings} swiss={tournament.format === "swiss"} />}
         </div>
       </main>
     </>
