@@ -15,6 +15,7 @@ RUN --mount=type=cache,target=/root/.npm npm ci
 FROM base AS builder
 
 ENV NODE_ENV=production
+ENV NODE_OPTIONS=--max-old-space-size=1024
 COPY --from=build-dependencies /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
