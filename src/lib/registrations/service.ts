@@ -86,6 +86,7 @@ export async function reviewRegistration(input: {
       include: { members: { orderBy: [{ isCaptain: "desc" }, { isReserve: "asc" }, { createdAt: "asc" }] }, tournament: true }
     });
     if (!registration) throw new RegistrationOperationError("Registration not found.", 404);
+    if (registration.status !== "pending") throw new RegistrationOperationError("Registration has already been reviewed.", 409);
     await assertTournamentEditable(tx, registration.tournamentId);
     if (input.action === "reject") {
       if (registration.resolvedTeamId) throw new RegistrationOperationError("An enrolled registration must be removed from the event before rejection.", 409);
@@ -164,6 +165,33 @@ export async function reviewRegistration(input: {
       }
     });
   });
+}
+
+export async function bulkReviewRegistrations(input: {
+  registrationIds: string[];
+  action: "reject" | "approve_new";
+  reviewNote?: string;
+}) {
+  const succeeded: string[] = [];
+  const failed: Array<{ registrationId: string; error: string }> = [];
+
+  for (const registrationId of input.registrationIds) {
+    try {
+      await reviewRegistration({
+        registrationId,
+        action: input.action,
+        reviewNote: input.reviewNote
+      });
+      succeeded.push(registrationId);
+    } catch (error) {
+      failed.push({
+        registrationId,
+        error: error instanceof Error ? error.message : "Registration could not be updated."
+      });
+    }
+  }
+
+  return { succeeded, failed };
 }
 
 export async function assembleSoloTeam(input: { tournamentId: string; registrationIds: string[]; teamName: string }) {

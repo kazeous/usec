@@ -8,7 +8,10 @@ export const dynamic = "force-dynamic";
 export default async function StaffRegistrationsPage() {
   const staff = await requireStaff();
   const [registrations, teams] = await Promise.all([
-    prisma.registration.findMany({ include: { members: { orderBy: [{ isCaptain: "desc" }, { isReserve: "asc" }, { createdAt: "asc" }] }, tournament: true, resolvedTeam: true }, orderBy: { createdAt: "desc" } }),
+    prisma.registration.findMany({
+      include: { members: { orderBy: [{ isCaptain: "desc" }, { isReserve: "asc" }, { createdAt: "asc" }] }, tournament: true, resolvedTeam: true },
+      orderBy: [{ game: "asc" }, { createdAt: "desc" }]
+    }),
     prisma.team.findMany({ select: { id: true, name: true, game: true }, orderBy: { name: "asc" } })
   ]);
 
