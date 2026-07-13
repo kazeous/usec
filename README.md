@@ -55,3 +55,13 @@ npx prisma migrate reset --force
 ```
 
 This deletes the existing schema, applies every migration, records the migration history, and runs the base seed. Never run this reset command against a database whose data must be preserved.
+
+### Synthetic registration load
+
+For a test deployment with exactly one open tournament per game, create 16 pending Valorant team registrations, 16 CS2 team registrations, 16 LoL team registrations, and 60 pending TFT player registrations:
+
+```bash
+npm run db:test-registrations -- --confirm-usec-test-registrations --title="USEC Fresher II"
+```
+
+The command is guarded, additive, transactional, and idempotent. It uses deterministic `USEC Test` identities, refuses ambiguous or incompatible tournament targets, and reports created versus preserved records. It creates registrations only: staff review, teams, tournament entries, brackets, and TFT lobbies remain untouched. Re-running it preserves seeded registrations that staff have already approved or rejected instead of resetting their workflow state.
